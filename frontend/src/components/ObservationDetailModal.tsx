@@ -27,13 +27,15 @@ export const ObservationDetailModal: React.FC<Props> = ({ observation, onClose }
         {/* Header */}
         <div className="relative aspect-video max-h-72 w-full bg-slate-900 overflow-hidden">
           <img
-            src={observation.image_url}
+            src={(!observation.image_url || observation.image_url.includes('unsplash') || observation.image_url.includes('example.com'))
+              ? (observation.species_id ? `/species/${observation.species_id}.jpg` : '/species/indian-peafowl.jpg')
+              : observation.image_url}
             alt={observation.predicted_species}
             className="w-full h-full object-cover"
             onError={(e) => {
               const target = e.currentTarget;
               const fallback = observation.species_id ? `/species/${observation.species_id}.jpg` : '/species/indian-peafowl.jpg';
-              if (!target.src.includes(fallback)) {
+              if (!target.src.endsWith(fallback)) {
                 target.src = fallback;
               }
             }}

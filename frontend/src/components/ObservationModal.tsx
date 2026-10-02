@@ -107,7 +107,9 @@ export const ObservationModal: React.FC<Props> = ({
       } else if (!finalImageUrl) {
         finalImageUrl =
           prediction.species_details?.image_url ||
-          "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80";
+          (prediction.top_prediction.species_id
+            ? `/species/${prediction.top_prediction.species_id}.jpg`
+            : "/species/indian-peafowl.jpg");
       }
 
       const payload: ObservationCreatePayload = {

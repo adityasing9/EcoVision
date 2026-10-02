@@ -209,10 +209,31 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutM
   }
 }
 
+export function sanitizeObservation(obs: Observation): Observation {
+  let img = (obs.image_url || "").trim();
+  if (!img || img.includes("unsplash.com") || img.includes("example.com")) {
+    img = obs.species_id ? `/species/${obs.species_id}.jpg` : "/species/indian-peafowl.jpg";
+  }
+  return {
+    ...obs,
+    image_url: img,
+    species: obs.species || (obs.species_id ? LOCAL_SPECIES_CATALOG[obs.species_id] : undefined),
+  };
+}
+
 function getStoredLocalObservations(): Observation[] {
   try {
     const raw = localStorage.getItem("ecovision_local_observations");
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed: Observation[] = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        const cleaned = parsed
+          .filter((o) => !o.location_name?.toLowerCase().includes("acceptance test"))
+          .map(sanitizeObservation);
+        localStorage.setItem("ecovision_local_observations", JSON.stringify(cleaned));
+        return cleaned;
+      }
+    }
   } catch {
     // Ignore localStorage parse errors
   }
@@ -222,7 +243,7 @@ function getStoredLocalObservations(): Observation[] {
 function saveLocalObservation(obs: Observation): void {
   try {
     const list = getStoredLocalObservations();
-    list.unshift(obs);
+    list.unshift(sanitizeObservation(obs));
     localStorage.setItem("ecovision_local_observations", JSON.stringify(list));
   } catch {
     // Ignore localStorage write errors
@@ -383,10 +404,10 @@ export const api = {
         .single();
 
       if (!error && data) {
-        const obs: Observation = {
+        const obs: Observation = sanitizeObservation({
           ...data,
           species: data.species_id ? LOCAL_SPECIES_CATALOG[data.species_id] : undefined,
-        };
+        });
         saveLocalObservation(obs);
         return obs;
       }
@@ -396,7 +417,7 @@ export const api = {
 
     // Local in-memory / localStorage fallback
     const localId = `local-${Date.now()}`;
-    const localObs: Observation = {
+    const localObs: Observation = sanitizeObservation({
       id: localId,
       species_id: payload.species_id,
       predicted_species: payload.predicted_species,
@@ -415,7 +436,7 @@ export const api = {
       is_demo: payload.is_demo ?? false,
       created_at: new Date().toISOString(),
       species: payload.species_id ? LOCAL_SPECIES_CATALOG[payload.species_id] : undefined,
-    };
+    });
     saveLocalObservation(localObs);
     return localObs;
   },
@@ -442,7 +463,10 @@ export const api = {
         }, 3000);
 
         if (res.ok) {
-          return await res.json();
+          const list: Observation[] = await res.json();
+          return list
+            .filter((item) => !item.location_name?.toLowerCase().includes("acceptance test"))
+            .map(sanitizeObservation);
         } else {
           backendOnline = false;
         }
@@ -470,14 +494,18 @@ export const api = {
 
       const { data, error } = await query;
       if (!error && data && data.length > 0) {
-        const mapped = data.map((item) => ({
-          ...item,
-          species: item.species_id ? LOCAL_SPECIES_CATALOG[item.species_id] : undefined,
-        }));
+        const mapped = data
+          .filter((item: any) => !item.location_name?.toLowerCase().includes("acceptance test"))
+          .map((item: any) =>
+            sanitizeObservation({
+              ...item,
+              species: item.species_id ? LOCAL_SPECIES_CATALOG[item.species_id] : undefined,
+            })
+          );
 
         // Merge any locally logged observations
         const localList = getStoredLocalObservations();
-        const merged = [...localList.filter(l => !mapped.some(m => m.id === l.id)), ...mapped];
+        const merged = [...localList.filter((l) => !mapped.some((m) => m.id === l.id)), ...mapped];
         return merged;
       }
     } catch {
@@ -485,7 +513,7 @@ export const api = {
     }
 
     // Return combined local storage + seeded demo observations
-    let fallback = [...getStoredLocalObservations(), ...FALLBACK_DEMO_OBSERVATIONS];
+    let fallback = [...getStoredLocalObservations(), ...FALLBACK_DEMO_OBSERVATIONS].map(sanitizeObservation);
     if (params?.species_id) {
       fallback = fallback.filter((o) => o.species_id === params.species_id);
     }
@@ -500,7 +528,8 @@ export const api = {
       try {
         const res = await fetchWithTimeout(`${API_BASE}/api/observations/${id}`, {}, 2500);
         if (res.ok) {
-          return await res.json();
+          const data = await res.json();
+          return sanitizeObservation(data);
         } else {
           backendOnline = false;
         }
@@ -516,20 +545,20 @@ export const api = {
         .eq("id", id)
         .single();
       if (!error && data) {
-        return {
+        return sanitizeObservation({
           ...data,
           species: data.species_id ? LOCAL_SPECIES_CATALOG[data.species_id] : undefined,
-        };
+        });
       }
     } catch {
       // Fallback
     }
 
     const localMatch = getStoredLocalObservations().find((o) => o.id === id);
-    if (localMatch) return localMatch;
+    if (localMatch) return sanitizeObservation(localMatch);
 
     const demoMatch = FALLBACK_DEMO_OBSERVATIONS.find((o) => o.id === id);
-    if (demoMatch) return demoMatch;
+    if (demoMatch) return sanitizeObservation(demoMatch);
 
     throw new Error("Observation record not found");
   },
@@ -710,6 +739,9 @@ export const api = {
 
     for (const obs of observations) {
       if (obs.latitude !== undefined && obs.longitude !== undefined) {
+        const cleanImg = (!obs.image_url || obs.image_url.includes("unsplash") || obs.image_url.includes("example.com"))
+          ? (obs.species_id ? `/species/${obs.species_id}.jpg` : "/species/indian-peafowl.jpg")
+          : obs.image_url;
         points.push({
           id: obs.id,
           species_id: obs.species_id,
@@ -722,7 +754,7 @@ export const api = {
           behavior: obs.behavior,
           confidence: obs.prediction_confidence,
           observed_at: obs.observed_at,
-          image_url: obs.image_url,
+          image_url: cleanImg,
           is_demo: obs.is_demo,
         });
       }

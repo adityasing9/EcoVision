@@ -108,9 +108,14 @@ def test_full_acceptance_workflow():
         assert "ecological_role" in spec_data
         print(f"[OK] Stage 7: Species natural-history compendium verified for {spec_data['common_name']}.")
 
-        # Cleanup test record
-        client.delete(f"/api/observations/{created_id}")
-        print("[OK] Cleanup: Test observation cleaned up.")
+        # Cleanup test record using admin privileges
+        try:
+            from app.db.supabase import get_supabase_admin_client
+            admin = get_supabase_admin_client()
+            admin.table("observations").delete().eq("id", created_id).execute()
+            print(f"[OK] Cleanup: Test observation {created_id} cleaned up.")
+        except Exception as e:
+            print(f"[WARN] Cleanup failed: {e}")
         print("\nALL 7 ACCEPTANCE TEST WORKFLOW PHASES VERIFIED SUCCESSFULLY!")
 
 

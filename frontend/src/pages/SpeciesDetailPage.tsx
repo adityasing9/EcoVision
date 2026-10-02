@@ -83,12 +83,12 @@ export const SpeciesDetailPage: React.FC = () => {
           <div className="md:col-span-5 relative aspect-square md:aspect-auto bg-slate-900 overflow-hidden">
             {species.image_url && (
               <img
-                src={species.image_url}
+                src={(!species.image_url || species.image_url.includes('unsplash') || species.image_url.includes('example.com')) ? `/species/${species.id}.jpg` : species.image_url}
                 alt={species.common_name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   const target = e.currentTarget;
-                  if (!target.src.includes(`/species/${species.id}.jpg`)) {
+                  if (!target.src.endsWith(`/species/${species.id}.jpg`)) {
                     target.src = `/species/${species.id}.jpg`;
                   }
                 }}

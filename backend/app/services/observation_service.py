@@ -80,6 +80,12 @@ class ObservationService:
 
             results = []
             for item in data:
+                if "Acceptance Test" in item.get("location_name", ""):
+                    continue
+                img = (item.get("image_url") or "").strip()
+                if not img or "unsplash.com" in img or "example.com" in img:
+                    s_id = item.get("species_id") or "indian-peafowl"
+                    item["image_url"] = f"/species/{s_id}.jpg"
                 spec = None
                 s_id = item.get("species_id")
                 if s_id and s_id in SPECIES_CATALOG:

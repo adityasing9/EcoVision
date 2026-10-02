@@ -24,13 +24,13 @@ export const SpeciesCard: React.FC<Props> = ({ species }) => {
       <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
         {species.image_url ? (
           <img
-            src={species.image_url}
+            src={(!species.image_url || species.image_url.includes('unsplash') || species.image_url.includes('example.com')) ? `/species/${species.id}.jpg` : species.image_url}
             alt={species.common_name}
             className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
             loading="lazy"
             onError={(e) => {
               const target = e.currentTarget;
-              if (!target.src.includes(`/species/${species.id}.jpg`)) {
+              if (!target.src.endsWith(`/species/${species.id}.jpg`)) {
                 target.src = `/species/${species.id}.jpg`;
               }
             }}

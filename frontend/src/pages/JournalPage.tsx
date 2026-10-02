@@ -32,6 +32,14 @@ const HABITATS: (HabitatType | "All")[] = [
   "Garden",
 ];
 
+const getObservationImageSrc = (obs: Observation): string => {
+  const url = (obs.image_url || "").trim();
+  if (!url || url.includes("unsplash.com") || url.includes("example.com")) {
+    return obs.species_id ? `/species/${obs.species_id}.jpg` : "/species/indian-peafowl.jpg";
+  }
+  return url;
+};
+
 export const JournalPage: React.FC = () => {
   const { user } = useAuth();
   const [observations, setObservations] = useState<Observation[]>([]);
@@ -225,14 +233,14 @@ export const JournalPage: React.FC = () => {
               <div>
                 <div className="relative aspect-[16/10] bg-slate-900 overflow-hidden">
                   <img
-                    src={obs.image_url}
+                    src={getObservationImageSrc(obs)}
                     alt={obs.predicted_species}
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     loading="lazy"
                     onError={(e) => {
                       const target = e.currentTarget;
                       const fallback = obs.species_id ? `/species/${obs.species_id}.jpg` : '/species/indian-peafowl.jpg';
-                      if (!target.src.includes(fallback)) {
+                      if (!target.src.endsWith(fallback)) {
                         target.src = fallback;
                       }
                     }}
@@ -311,13 +319,13 @@ export const JournalPage: React.FC = () => {
               className="p-4 hover:bg-nature-50/50 transition flex items-center gap-4 cursor-pointer"
             >
               <img
-                src={obs.image_url}
+                src={getObservationImageSrc(obs)}
                 alt={obs.predicted_species}
                 className="w-16 h-16 rounded-xl object-cover shrink-0"
                 onError={(e) => {
                   const target = e.currentTarget;
                   const fallback = obs.species_id ? `/species/${obs.species_id}.jpg` : '/species/indian-peafowl.jpg';
-                  if (!target.src.includes(fallback)) {
+                  if (!target.src.endsWith(fallback)) {
                     target.src = fallback;
                   }
                 }}

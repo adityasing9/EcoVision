@@ -134,7 +134,7 @@ export const MapPage: React.FC = () => {
 
       const popupHtml = `
         <div style="font-family: sans-serif; max-width: 240px; padding: 4px;">
-          <img src="${pt.image_url}" alt="${pt.species_name}" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" />
+          <img src="${pt.image_url && !pt.image_url.includes('unsplash') && !pt.image_url.includes('example.com') ? pt.image_url : (pt.species_id ? `/species/${pt.species_id}.jpg` : '/species/indian-peafowl.jpg')}" alt="${pt.species_name}" style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" onerror="this.src='/species/${pt.species_id || 'indian-peafowl'}.jpg'" />
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
             <span style="font-size: 10px; font-weight: bold; background: ${color}20; color: ${color}; padding: 2px 6px; border-radius: 4px;">
               ${pt.habitat}
