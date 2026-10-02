@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+**/.pytest_cache/
+
+# Node
+node_modules/
+**/node_modules/
+.npm
+dist/
+**/dist/
+dist-ssr/
+*.local
+
+# Environment variables (strict protection)
+.env
+*.env
+**/.env
+**/*.env
+!.env.example
+!**/.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Large ML Weights / Cache
+*.pt
+*.pth
+*.onnx
+*.h5
+ml/weights/*
+!ml/weights/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db

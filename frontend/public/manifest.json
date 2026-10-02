@@ -1,0 +1,21 @@
+{
+  "short_name": "EcoVision",
+  "name": "EcoVision Biodiversity & Bird Monitoring",
+  "description": "AI-assisted avian identification and structured ecological observation notebook",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192' fill='%231F3B21'><rect width='192' height='192' rx='38' fill='%231F3B21'/><path d='M96 30C59.5 30 30 59.5 30 96s29.5 66 66 66 66-29.5 66-66-29.5-66-66-66zm-5 110.5c-22-2.7-39-21.4-39-44.5 0-3.4.4-6.7 1.2-10L75 110v5.5c0 6.1 5 11 11 11v14zm38.5-14.2c-1.4-4.5-5.5-7.8-10.5-7.8h-5.5v-16.5c0-3.1-2.5-5.5-5.5-5.5H70v-11h11c3.1 0 5.5-2.5 5.5-5.5V60h11c6.1 0 11-5 11-11v-2.3c16.3 6.6 27.8 22.6 27.8 41.3 0 11.6-4.5 22.2-11.8 30.1z' fill='%23E3EBE3'/></svg>",
+      "type": "image/svg+xml",
+      "sizes": "192x192"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%231F3B21'><rect width='512' height='512' rx='102' fill='%231F3B21'/><path d='M256 80C158.7 80 80 158.7 80 256s78.7 176 176 176 176-78.7 176-176S353.3 80 256 80zm-13.3 294.7c-58.7-7.2-104-57.1-104-118.7 0-9.1 1.1-17.9 3.2-26.7L200 293.3v14.7c0 16.3 13.3 29.3 29.3 29.3v37.4zm102.7-37.9c-3.7-12-14.7-20.8-28-20.8h-14.7v-44c0-8.3-6.7-14.7-14.7-14.7H186.7v-29.3h29.3c8.3 0 14.7-6.7 14.7-14.7V160h29.3c16.3 0 29.3-13.3 29.3-29.3v-6.1c43.5 17.6 74.1 60.3 74.1 110.1 0 30.9-12 59.2-31.4 80.3z' fill='%23E3EBE3'/></svg>",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1F3B21",
+  "background_color": "#FCFDF9"
+}

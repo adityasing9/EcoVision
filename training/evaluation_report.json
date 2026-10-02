@@ -1,0 +1,15 @@
+{
+  "architecture": "ResNet-50",
+  "num_classes": 20,
+  "metrics": {
+    "top1_accuracy": 0.0,
+    "precision_weighted": 0.0,
+    "recall_weighted": 0.0,
+    "f1_score_weighted": 0.0
+  },
+  "scientific_disclaimer": "Benchmark metrics reflect evaluation against partitioned test sets and visual features. Model predictions are designed to provide decision-support for field observers and educators, not certified automated taxonomical proof.",
+  "confusion_matrix_shape": [
+    13,
+    13
+  ]
+}
