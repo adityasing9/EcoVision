@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "../context/AuthContext";
 import { X, Lock, Mail, User, Loader2, Sparkles } from "lucide-react";
 
@@ -16,6 +17,20 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = prev || "unset";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -43,9 +58,16 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white border border-nature-200 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] overflow-y-auto bg-black/75 backdrop-blur-md p-3 sm:p-6 animate-in fade-in"
+      onClick={onClose}
+    >
+      <div className="min-h-full flex items-center justify-center py-6 sm:py-10">
+        <div
+          className="relative bg-white border border-nature-200 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden my-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header */}
         <div className="bg-nature-900 text-white px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -175,5 +197,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
         </form>
       </div>
     </div>
-  );
+  </div>,
+  document.body
+);
 };

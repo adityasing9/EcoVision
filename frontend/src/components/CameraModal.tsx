@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Camera, X, RefreshCw, Check } from "lucide-react";
 
 interface Props {
@@ -102,11 +103,32 @@ export const CameraModal: React.FC<Props> = ({ isOpen, onClose, onCapture }) => 
     setCapturedBlob(null);
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = prev || "unset";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 border border-nature-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col text-white">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] overflow-y-auto bg-black/85 backdrop-blur-md p-3 sm:p-6 animate-in fade-in"
+      onClick={onClose}
+    >
+      <div className="min-h-full flex items-center justify-center py-6">
+        <div
+          className="bg-slate-900 border border-nature-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col text-white my-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
           <div className="flex items-center gap-2">
@@ -204,5 +226,7 @@ export const CameraModal: React.FC<Props> = ({ isOpen, onClose, onCapture }) => 
         </div>
       </div>
     </div>
-  );
+  </div>,
+  document.body
+);
 };
