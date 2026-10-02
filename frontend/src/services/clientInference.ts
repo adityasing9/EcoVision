@@ -83,17 +83,18 @@ const IMAGENET_NEURAL_MAPPINGS: Record<string, Array<{ sp: string; w: number }>>
 
   // Kingfishers / Jacamars / Bee eaters
   jacamar: [
-    { sp: "white-throated-kingfisher", w: 4.5 },
-    { sp: "common-kingfisher", w: 2.0 },
+    { sp: "white-throated-kingfisher", w: 3.5 },
+    { sp: "common-kingfisher", w: 3.5 },
+    { sp: "indian-roller", w: 3.0 },
   ],
   "bee eater": [
     { sp: "white-throated-kingfisher", w: 3.5 },
-    { sp: "common-kingfisher", w: 2.5 },
-    { sp: "indian-roller", w: 2.0 },
+    { sp: "common-kingfisher", w: 3.5 },
+    { sp: "indian-roller", w: 3.0 },
   ],
   kingfisher: [
-    { sp: "white-throated-kingfisher", w: 4.5 },
-    { sp: "common-kingfisher", w: 3.5 },
+    { sp: "white-throated-kingfisher", w: 4.0 },
+    { sp: "common-kingfisher", w: 4.0 },
   ],
   coucal: [{ sp: "white-throated-kingfisher", w: 2.5 }],
   "ruddy turnstone": [
@@ -103,20 +104,20 @@ const IMAGENET_NEURAL_MAPPINGS: Record<string, Array<{ sp: string; w: number }>>
 
   // Owls & facial disk mimics in ImageNet
   "great grey owl": [
-    { sp: "barn-owl", w: 4.5 },
-    { sp: "spotted-owlet", w: 3.0 },
+    { sp: "spotted-owlet", w: 4.5 },
+    { sp: "barn-owl", w: 3.5 },
   ],
   "screech owl": [
-    { sp: "spotted-owlet", w: 4.0 },
-    { sp: "barn-owl", w: 3.0 },
+    { sp: "spotted-owlet", w: 4.5 },
+    { sp: "barn-owl", w: 3.5 },
   ],
   owl: [
-    { sp: "barn-owl", w: 4.0 },
-    { sp: "spotted-owlet", w: 3.0 },
+    { sp: "spotted-owlet", w: 4.0 },
+    { sp: "barn-owl", w: 3.5 },
   ],
-  meerkat: [{ sp: "barn-owl", w: 4.0 }],
-  marmoset: [{ sp: "barn-owl", w: 3.0 }],
-  teddy: [{ sp: "barn-owl", w: 3.0 }],
+  meerkat: [{ sp: "barn-owl", w: 4.5 }],
+  marmoset: [{ sp: "barn-owl", w: 4.0 }],
+  teddy: [{ sp: "barn-owl", w: 4.0 }],
 
   // Sunbirds & small passerines
   "indigo bunting": [{ sp: "purple-sunbird", w: 5.0 }],
@@ -137,14 +138,20 @@ const IMAGENET_NEURAL_MAPPINGS: Record<string, Array<{ sp: string; w: number }>>
   // Cranes & Storks
   crane: [
     { sp: "sarus-crane", w: 4.5 },
-    { sp: "black-crowned-night-heron", w: 3.0 },
+    { sp: "black-crowned-night-heron", w: 2.5 },
   ],
-  "white stork": [{ sp: "painted-stork", w: 5.0 }],
+  "white stork": [
+    { sp: "painted-stork", w: 5.0 },
+    { sp: "sarus-crane", w: 2.5 },
+  ],
   "black stork": [
     { sp: "painted-stork", w: 3.5 },
-    { sp: "black-crowned-night-heron", w: 3.0 },
+    { sp: "black-crowned-night-heron", w: 2.5 },
   ],
-  stork: [{ sp: "painted-stork", w: 4.5 }],
+  stork: [
+    { sp: "painted-stork", w: 4.5 },
+    { sp: "sarus-crane", w: 2.5 },
+  ],
   spoonbill: [
     { sp: "painted-stork", w: 3.5 },
     { sp: "greater-flamingo", w: 3.0 },
@@ -152,19 +159,27 @@ const IMAGENET_NEURAL_MAPPINGS: Record<string, Array<{ sp: string; w: number }>>
   flamingo: [{ sp: "greater-flamingo", w: 5.0 }],
 
   // Raptors
-  kite: [{ sp: "brahminy-kite", w: 4.5 }],
-  "bald eagle": [
-    { sp: "brahminy-kite", w: 4.0 },
+  kite: [
+    { sp: "brahminy-kite", w: 3.5 },
     { sp: "osprey", w: 3.5 },
+    { sp: "peregrine-falcon", w: 3.5 },
+  ],
+  "bald eagle": [
+    { sp: "brahminy-kite", w: 3.5 },
+    { sp: "osprey", w: 3.5 },
+    { sp: "peregrine-falcon", w: 3.5 },
   ],
   osprey: [{ sp: "osprey", w: 5.0 }],
   "sea eagle": [
     { sp: "osprey", w: 4.5 },
-    { sp: "brahminy-kite", w: 3.0 },
+    { sp: "brahminy-kite", w: 3.5 },
   ],
   falcon: [{ sp: "peregrine-falcon", w: 5.0 }],
   "peregrine falcon": [{ sp: "peregrine-falcon", w: 5.0 }],
-  vulture: [{ sp: "brahminy-kite", w: 2.5 }],
+  vulture: [
+    { sp: "brahminy-kite", w: 2.5 },
+    { sp: "osprey", w: 2.5 },
+  ],
 
   // Parrots
   parakeet: [{ sp: "rose-ringed-parakeet", w: 5.0 }],
@@ -281,12 +296,14 @@ async function inspectImage(file: File): Promise<ImageInspection> {
         let slateGrey = 0;
         let sampledPixels = 0;
 
+        const centerData = cctx ? cctx.getImageData(0, 0, w, h).data : fullData;
+
         for (let y = 20; y < h - 20; y += 4) {
           for (let x = 20; x < w - 20; x += 4) {
             const i = (y * w + x) * 4;
-            const r = fullData[i] / 255;
-            const g = fullData[i + 1] / 255;
-            const b = fullData[i + 2] / 255;
+            const r = centerData[i] / 255;
+            const g = centerData[i + 1] / 255;
+            const b = centerData[i + 2] / 255;
             const v = Math.max(r, g, b);
             sampledPixels++;
 
@@ -295,7 +312,7 @@ async function inspectImage(file: File): Promise<ImageInspection> {
             // Emerald Green (Parakeet, Peafowl train feathers)
             if (g > 0.35 && g > r * 1.15 && g > b * 1.10) emeraldGreen++;
             // Vibrant Pink (Flamingo, Stork tertials)
-            if (r > 0.55 && g > 0.30 && b > 0.35 && r > g * 1.25 && r > b * 1.15) vibrantPink++;
+            if (r > 0.60 && b > 0.45 && r > g * 1.20) vibrantPink++;
             // Golden Yellow (Flameback mantle, Hornbill casque)
             if (r > 0.48 && g > 0.40 && b < 0.30 && Math.abs(r - g) < 0.22) goldenYellow++;
             // Chestnut Brown (Kingfisher belly, Brahminy Kite body)
@@ -509,138 +526,139 @@ export async function runClientInference(
   // 4. Fine-Grained Ornithological Feature Discrimination
   const { colorSignature } = inspection;
 
-  // White-throated Kingfisher:
-  // Dark body/perch + electric turquoise wing covert + chestnut brown body / coral red dagger bill
+  // Rose-ringed Parakeet:
+  const isParrot = /parakeet|parrot|lorikeet|macaw|cockatoo/.test(neuralSummary);
   if (
-    colorSignature.deepBlack >= 0.15 &&
-    colorSignature.electricBlue >= 0.008 &&
-    (colorSignature.chestnutBrown >= 0.01 || colorSignature.coralRed >= 0.003)
+    (colorSignature.emeraldGreen >= 0.025 && isParrot) ||
+    (colorSignature.emeraldGreen >= 0.05 && !/owl|heron|crane|stork|kite|eagle|falcon/.test(neuralSummary))
   ) {
-    speciesScores["white-throated-kingfisher"] = (speciesScores["white-throated-kingfisher"] || 0) + 3.5;
-  } else if (neuralSummary.includes("jacamar") && colorSignature.electricBlue >= 0.005) {
-    speciesScores["white-throated-kingfisher"] = (speciesScores["white-throated-kingfisher"] || 0) + 3.2;
+    speciesScores["rose-ringed-parakeet"] = (speciesScores["rose-ringed-parakeet"] || 0) + 4.5;
   }
 
-  // Common Kingfisher:
-  if (
-    colorSignature.electricBlue >= 0.08 &&
-    colorSignature.chestnutBrown >= 0.02 &&
-    colorSignature.pureWhite < 0.10
-  ) {
-    speciesScores["common-kingfisher"] = (speciesScores["common-kingfisher"] || 0) + 3.2;
-  }
-
-  // Barn Owl:
-  // Heart-shaped pale facial disk + golden-buff plumage + dark/screen background + zero blue/green
-  if (
-    (colorSignature.pureWhite >= 0.08 || colorSignature.buffTan >= 0.012) &&
-    colorSignature.electricBlue < 0.003 &&
-    colorSignature.emeraldGreen < 0.005
-  ) {
-    if (
-      colorSignature.deepBlack >= 0.18 ||
-      neuralSummary.includes("owl") ||
-      neuralSummary.includes("meerkat") ||
-      neuralSummary.includes("marmoset") ||
-      neuralSummary.includes("teddy")
-    ) {
-      speciesScores["barn-owl"] = (speciesScores["barn-owl"] || 0) + 3.8;
+  // Raptors: Peregrine Falcon vs Osprey vs Brahminy Kite
+  const isRaptor = /kite|bald eagle|vulture|falcon|osprey/.test(neuralSummary);
+  if (isRaptor || colorSignature.slateGrey >= 0.15) {
+    // Brahminy Kite: pure white head/chest + rich chestnut body
+    if (colorSignature.pureWhite >= 0.12 && colorSignature.chestnutBrown >= 0.04) {
+      speciesScores["brahminy-kite"] = (speciesScores["brahminy-kite"] || 0) + 4.8;
     }
-  }
-
-  // Spotted Owlet:
-  if (
-    neuralSummary.includes("owl") &&
-    colorSignature.slateGrey >= 0.10 &&
-    colorSignature.buffTan < 0.01
-  ) {
-    speciesScores["spotted-owlet"] = (speciesScores["spotted-owlet"] || 0) + 2.5;
-  }
-
-  // Purple Sunbird:
-  // Small dark metallic purple/blue plumage
-  if (
-    colorSignature.electricBlue >= 0.02 &&
-    colorSignature.chestnutBrown < 0.005 &&
-    colorSignature.pureWhite < 0.45
-  ) {
-    speciesScores["purple-sunbird"] = (speciesScores["purple-sunbird"] || 0) + 3.2;
-  }
-
-  // Indian Peafowl:
-  // Requires royal blue AND green/gold ocelli train (NOT blue alone)
-  if (
-    (colorSignature.electricBlue >= 0.025 &&
-      (colorSignature.emeraldGreen >= 0.025 || colorSignature.goldenYellow >= 0.03)) ||
-    neuralSummary.includes("peacock") ||
-    neuralSummary.includes("peahen")
-  ) {
-    speciesScores["indian-peafowl"] = (speciesScores["indian-peafowl"] || 0) + 3.5;
-  }
-
-  // Black-crowned Night Heron:
-  if (
-    neuralSummary.includes("heron") ||
-    neuralSummary.includes("crane") ||
-    neuralSummary.includes("bittern")
-  ) {
-    if (colorSignature.pureWhite >= 0.12 && colorSignature.slateGrey >= 0.04) {
-      speciesScores["black-crowned-night-heron"] = (speciesScores["black-crowned-night-heron"] || 0) + 3.2;
+    // Osprey: dark brown/black mantle + white underparts + low chestnut
+    else if (colorSignature.deepBlack >= 0.15 && colorSignature.chestnutBrown < 0.02) {
+      speciesScores["osprey"] = (speciesScores["osprey"] || 0) + 4.8;
+    }
+    // Peregrine Falcon: slate-grey barred back + dark helmet + low black
+    else if (colorSignature.slateGrey >= 0.15 && colorSignature.deepBlack < 0.15) {
+      speciesScores["peregrine-falcon"] = (speciesScores["peregrine-falcon"] || 0) + 4.8;
     }
   }
 
   // Greater Flamingo:
-  if (colorSignature.vibrantPink >= 0.015 || neuralSummary.includes("flamingo")) {
-    speciesScores["greater-flamingo"] = (speciesScores["greater-flamingo"] || 0) + 3.5;
+  if (
+    /flamingo/.test(neuralSummary) ||
+    (colorSignature.vibrantPink >= 0.015 && !/owl|kite|eagle|falcon/.test(neuralSummary))
+  ) {
+    speciesScores["greater-flamingo"] = (speciesScores["greater-flamingo"] || 0) + 4.5;
   }
 
-  // Rose-ringed Parakeet:
+  // Sarus Crane vs Painted Stork:
+  if (/crane|stork/.test(neuralSummary) || colorSignature.slateGrey >= 0.12) {
+    if (colorSignature.crimsonRed >= 0.002 && colorSignature.slateGrey >= 0.10) {
+      speciesScores["sarus-crane"] = (speciesScores["sarus-crane"] || 0) + 4.5;
+    } else if (
+      colorSignature.vibrantPink >= 0.008 ||
+      (colorSignature.pureWhite >= 0.20 && colorSignature.deepBlack >= 0.06)
+    ) {
+      speciesScores["painted-stork"] = (speciesScores["painted-stork"] || 0) + 4.0;
+    }
+  }
+
+  // Common Kingfisher vs White-throated Kingfisher vs Indian Roller:
+  const isCoraciiform = /bee eater|jacamar|kingfisher|jay|coucal|ruddy turnstone/.test(neuralSummary);
+  if (isCoraciiform || colorSignature.electricBlue >= 0.04) {
+    if (
+      colorSignature.electricBlue >= 0.10 &&
+      colorSignature.chestnutBrown >= 0.015 &&
+      colorSignature.pureWhite < 0.06
+    ) {
+      speciesScores["common-kingfisher"] = (speciesScores["common-kingfisher"] || 0) + 4.8;
+    } else if (
+      colorSignature.deepBlack >= 0.12 &&
+      colorSignature.electricBlue >= 0.006 &&
+      (colorSignature.pureWhite >= 0.06 || colorSignature.coralRed >= 0.003 || colorSignature.chestnutBrown >= 0.01)
+    ) {
+      speciesScores["white-throated-kingfisher"] = (speciesScores["white-throated-kingfisher"] || 0) + 4.8;
+    } else if (colorSignature.electricBlue >= 0.04 && colorSignature.chestnutBrown < 0.01) {
+      speciesScores["indian-roller"] = (speciesScores["indian-roller"] || 0) + 4.8;
+    }
+  }
+
+  // Spotted Owlet vs Barn Owl:
+  if (/owl|meerkat|marmoset|teddy/.test(neuralSummary)) {
+    // Barn Owl: heart-shaped pale mask, high dark contrast (deepBlack >= 0.25) or mammalian face mimics
+    if (/meerkat|marmoset|teddy/.test(neuralSummary) || colorSignature.deepBlack >= 0.25) {
+      speciesScores["barn-owl"] = (speciesScores["barn-owl"] || 0) + 4.8;
+    }
+    // Spotted Owlet: round head, grey/brown speckled plumage (slateGrey >= 0.08) with low black contrast
+    else if (colorSignature.slateGrey >= 0.08 || /owl/.test(neuralSummary)) {
+      speciesScores["spotted-owlet"] = (speciesScores["spotted-owlet"] || 0) + 4.8;
+    }
+  }
+
+  // Purple Sunbird:
   if (
-    (colorSignature.emeraldGreen >= 0.05 && colorSignature.electricBlue < 0.005) ||
-    neuralSummary.includes("parakeet")
+    colorSignature.electricBlue >= 0.02 &&
+    colorSignature.chestnutBrown < 0.005 &&
+    colorSignature.pureWhite < 0.40
   ) {
-    speciesScores["rose-ringed-parakeet"] = (speciesScores["rose-ringed-parakeet"] || 0) + 3.5;
+    speciesScores["purple-sunbird"] = (speciesScores["purple-sunbird"] || 0) + 4.5;
+  }
+
+  // Black-crowned Night Heron:
+  if (/heron|bittern/.test(neuralSummary)) {
+    if (colorSignature.pureWhite >= 0.10 && colorSignature.slateGrey >= 0.04) {
+      speciesScores["black-crowned-night-heron"] = (speciesScores["black-crowned-night-heron"] || 0) + 4.5;
+    }
+  }
+
+  // Indian Peafowl:
+  if (
+    (colorSignature.electricBlue >= 0.025 &&
+      (colorSignature.emeraldGreen >= 0.025 || colorSignature.goldenYellow >= 0.03)) ||
+    /peacock|peahen/.test(neuralSummary)
+  ) {
+    speciesScores["indian-peafowl"] = (speciesScores["indian-peafowl"] || 0) + 4.5;
   }
 
   // Black-rumped Flameback:
   if (
     (colorSignature.crimsonRed >= 0.02 &&
       (colorSignature.goldenYellow >= 0.025 || colorSignature.deepBlack >= 0.08)) ||
-    neuralSummary.includes("woodpecker")
+    neuralSummary.includes("woodpecker") ||
+    neuralSummary.includes("flicker")
   ) {
-    speciesScores["black-rumped-flameback"] = (speciesScores["black-rumped-flameback"] || 0) + 3.5;
+    speciesScores["black-rumped-flameback"] = (speciesScores["black-rumped-flameback"] || 0) + 4.5;
   }
 
   // Great Hornbill:
   if (
     (colorSignature.goldenYellow >= 0.05 && colorSignature.deepBlack >= 0.15) ||
-    neuralSummary.includes("hornbill")
+    neuralSummary.includes("hornbill") ||
+    neuralSummary.includes("toucan")
   ) {
-    speciesScores["great-hornbill"] = (speciesScores["great-hornbill"] || 0) + 3.2;
-  }
-
-  // Brahminy Kite:
-  if (
-    (colorSignature.pureWhite >= 0.15 &&
-      colorSignature.chestnutBrown >= 0.05 &&
-      colorSignature.electricBlue < 0.005) ||
-    neuralSummary.includes("kite")
-  ) {
-    speciesScores["brahminy-kite"] = (speciesScores["brahminy-kite"] || 0) + 3.2;
+    speciesScores["great-hornbill"] = (speciesScores["great-hornbill"] || 0) + 4.5;
   }
 
   // Oriental Magpie-Robin:
   if (
-    (colorSignature.pureWhite >= 0.20 &&
-      colorSignature.deepBlack >= 0.20 &&
+    (colorSignature.pureWhite >= 0.15 &&
+      colorSignature.deepBlack >= 0.15 &&
       colorSignature.buffTan < 0.008 &&
       colorSignature.electricBlue < 0.005 &&
       colorSignature.emeraldGreen < 0.005 &&
-      !neuralSummary.includes("owl") &&
-      !neuralSummary.includes("meerkat")) ||
+      !/owl|meerkat|marmoset/.test(neuralSummary)) ||
     neuralSummary.includes("magpie")
   ) {
-    speciesScores["oriental-magpie-robin"] = (speciesScores["oriental-magpie-robin"] || 0) + 3.2;
+    speciesScores["oriental-magpie-robin"] = (speciesScores["oriental-magpie-robin"] || 0) + 4.0;
   }
 
   // 5. Filename explicit keyword hints (for files with standard descriptive names)
