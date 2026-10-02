@@ -78,8 +78,9 @@ const SPECIES_KEYWORDS: Record<string, string[]> = {
 /** ImageNet class mapping to candidate EcoVision species with calibrated weights */
 const IMAGENET_NEURAL_MAPPINGS: Record<string, Array<{ sp: string; w: number }>> = {
   // Peafowl
-  peacock: [{ sp: "indian-peafowl", w: 5.0 }],
-  peahen: [{ sp: "indian-peafowl", w: 5.0 }],
+  peacock: [{ sp: "indian-peafowl", w: 5.5 }],
+  peahen: [{ sp: "indian-peafowl", w: 5.5 }],
+  quill: [{ sp: "indian-peafowl", w: 5.0 }],
 
   // Pelicans
   pelican: [{ sp: "spot-billed-pelican", w: 5.5 }],
@@ -460,6 +461,7 @@ export async function runClientInference(
   }
 
   let neuralSummary = "";
+  let allPreds: Array<{ className: string; probability: number }> = [];
 
   // 2. Run Deep Neural Network Classification via MobileNet across multiple scales
   try {
@@ -472,7 +474,7 @@ export async function runClientInference(
         net.classify(inspection.focalCanvas, 10),
       ]);
 
-      const allPreds = [...centerPreds, ...fullPreds, ...focalPreds];
+      allPreds = [...centerPreds, ...fullPreds, ...focalPreds];
 
       for (const pred of allPreds) {
         const labelLower = pred.className.toLowerCase();
@@ -481,6 +483,9 @@ export async function runClientInference(
 
         // Match against calibrated ImageNet neural mappings
         for (const [pattern, targets] of Object.entries(IMAGENET_NEURAL_MAPPINGS)) {
+          // Prevent substring collision: "cock" should not match inside "peacock", "hen" should not match inside "peahen"
+          if (pattern === "cock" && labelLower.includes("peacock")) continue;
+          if (pattern === "hen" && labelLower.includes("peahen")) continue;
           if (labelLower.includes(pattern)) {
             for (const target of targets) {
               speciesScores[target.sp] = (speciesScores[target.sp] || 0) + prob * target.w;
@@ -516,11 +521,19 @@ export async function runClientInference(
   // 4. Fine-Grained Ornithological Feature Discrimination
   const { colorSignature } = inspection;
 
+  // Indian Peafowl neural signature detection:
+  const isPeafowlNeural = allPreds.some(
+    (p) => /peacock|peahen|quill/.test(p.className.toLowerCase()) && p.probability >= 0.05
+  );
+
   // Red Junglefowl:
-  const isJunglefowl = /cock|rooster|hen|partridge|quail|junglefowl/.test(neuralSummary);
+  // Clean neuralSummary to avoid matching "cock" inside "peacock" or "hen" inside "peahen"
+  const cleanForJunglefowl = neuralSummary.replace(/\b(peacock|peahen)\b/g, "").replace(/peacock|peahen/g, "");
+  const isJunglefowl = /\b(cock|rooster|hen|partridge|quail|junglefowl)\b/.test(cleanForJunglefowl);
   if (
-    isJunglefowl ||
-    (colorSignature.crimsonRed >= 0.012 && (colorSignature.goldenYellow >= 0.02 || colorSignature.deepBlack >= 0.06))
+    !isPeafowlNeural &&
+    (isJunglefowl ||
+      (colorSignature.crimsonRed >= 0.012 && (colorSignature.goldenYellow >= 0.02 || colorSignature.deepBlack >= 0.06)))
   ) {
     speciesScores["red-junglefowl"] = (speciesScores["red-junglefowl"] || 0) + 4.8;
   }
@@ -567,14 +580,14 @@ export async function runClientInference(
 
   // White-throated Kingfisher vs Indian Roller:
   const isCoraciiform = /bee eater|jacamar|kingfisher|jay|coucal|ruddy turnstone/.test(neuralSummary);
-  if (isCoraciiform || colorSignature.electricBlue >= 0.04) {
+  if (isCoraciiform || (!isPeafowlNeural && colorSignature.electricBlue >= 0.04)) {
     if (
       colorSignature.deepBlack >= 0.12 &&
       colorSignature.electricBlue >= 0.006 &&
       (colorSignature.pureWhite >= 0.06 || colorSignature.coralRed >= 0.003 || colorSignature.chestnutBrown >= 0.01)
     ) {
       speciesScores["white-throated-kingfisher"] = (speciesScores["white-throated-kingfisher"] || 0) + 4.8;
-    } else if (colorSignature.electricBlue >= 0.04 && colorSignature.chestnutBrown < 0.01) {
+    } else if (!isPeafowlNeural && colorSignature.electricBlue >= 0.04 && colorSignature.chestnutBrown < 0.01) {
       speciesScores["indian-roller"] = (speciesScores["indian-roller"] || 0) + 4.8;
     }
   }
@@ -593,6 +606,7 @@ export async function runClientInference(
 
   // Purple Sunbird:
   if (
+    !isPeafowlNeural &&
     colorSignature.electricBlue >= 0.02 &&
     colorSignature.chestnutBrown < 0.005 &&
     colorSignature.pureWhite < 0.40
@@ -609,11 +623,11 @@ export async function runClientInference(
 
   // Indian Peafowl:
   if (
-    (colorSignature.electricBlue >= 0.025 &&
-      (colorSignature.emeraldGreen >= 0.025 || colorSignature.goldenYellow >= 0.03)) ||
-    /peacock|peahen/.test(neuralSummary)
+    isPeafowlNeural ||
+    ((colorSignature.emeraldGreen >= 0.04 || colorSignature.electricBlue >= 0.03) &&
+      colorSignature.goldenYellow >= 0.04)
   ) {
-    speciesScores["indian-peafowl"] = (speciesScores["indian-peafowl"] || 0) + 4.5;
+    speciesScores["indian-peafowl"] = (speciesScores["indian-peafowl"] || 0) + 4.8;
   }
 
   // Black-rumped Flameback:
