@@ -13,7 +13,18 @@ import { supabase } from "./supabase";
 import { LOCAL_SPECIES_CATALOG } from "./catalogData";
 import { runClientInference } from "./clientInference";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// Intelligent backend detection:
+// In production without an active custom backend or if pointing to an unhosted domain, default to direct Supabase / Web ML architecture
+const rawApiUrl = (import.meta.env.VITE_API_URL || "").trim();
+const isProd = import.meta.env.PROD;
+const isRenderDeadUrl = rawApiUrl.includes("ecovision-backend.onrender.com");
+
+const API_BASE = (isProd && (isRenderDeadUrl || !rawApiUrl))
+  ? ""
+  : rawApiUrl || (isProd ? "" : "http://localhost:8000");
+
+// Track backend availability to prevent spamming unreachable hosts
+let backendOnline: boolean = Boolean(API_BASE);
 
 // Fallback demo observations matching the database seeds
 const FALLBACK_DEMO_OBSERVATIONS: Observation[] = [
@@ -185,7 +196,7 @@ async function getAuthHeader(): Promise<Record<string, string>> {
 }
 
 /** Helper to race fetch with a timeout */
-async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 4000): Promise<Response> {
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 3000): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -221,24 +232,28 @@ function saveLocalObservation(obs: Observation): void {
 export const api = {
   // 1. AI Inference
   async predictBird(file: File, includeGradcam: boolean = true): Promise<PredictionResult> {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+    if (backendOnline && API_BASE) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
 
-      const res = await fetchWithTimeout(
-        `${API_BASE}/api/predict?include_gradcam=${includeGradcam}`,
-        {
-          method: "POST",
-          body: formData,
-        },
-        5000
-      );
+        const res = await fetchWithTimeout(
+          `${API_BASE}/api/predict?include_gradcam=${includeGradcam}`,
+          {
+            method: "POST",
+            body: formData,
+          },
+          4000
+        );
 
-      if (res.ok) {
-        return await res.json();
+        if (res.ok) {
+          return await res.json();
+        } else {
+          backendOnline = false;
+        }
+      } catch {
+        backendOnline = false;
       }
-    } catch {
-      // Backend offline or unreachable — seamlessly switch to client inference
     }
 
     // High fidelity browser inference fallback with Grad-CAM and calibrated confidence
@@ -247,28 +262,31 @@ export const api = {
 
   // 2. Image Upload
   async uploadImage(file: File): Promise<string> {
-    // Try backend upload first
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const headers = await getAuthHeader();
+    if (backendOnline && API_BASE) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const headers = await getAuthHeader();
 
-      const res = await fetchWithTimeout(
-        `${API_BASE}/api/observations/upload-image`,
-        {
-          method: "POST",
-          headers,
-          body: formData,
-        },
-        4000
-      );
+        const res = await fetchWithTimeout(
+          `${API_BASE}/api/observations/upload-image`,
+          {
+            method: "POST",
+            headers,
+            body: formData,
+          },
+          3000
+        );
 
-      if (res.ok) {
-        const data = await res.json();
-        return data.image_url;
+        if (res.ok) {
+          const data = await res.json();
+          return data.image_url;
+        } else {
+          backendOnline = false;
+        }
+      } catch {
+        backendOnline = false;
       }
-    } catch {
-      // Backend not responding, upload directly to Supabase storage
     }
 
     // Direct Supabase storage upload
@@ -306,28 +324,31 @@ export const api = {
 
   // 3. Observations CRUD
   async createObservation(payload: ObservationCreatePayload): Promise<Observation> {
-    // Try backend first
-    try {
-      const headers = {
-        "Content-Type": "application/json",
-        ...(await getAuthHeader()),
-      };
+    if (backendOnline && API_BASE) {
+      try {
+        const headers = {
+          "Content-Type": "application/json",
+          ...(await getAuthHeader()),
+        };
 
-      const res = await fetchWithTimeout(
-        `${API_BASE}/api/observations`,
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify(payload),
-        },
-        4000
-      );
+        const res = await fetchWithTimeout(
+          `${API_BASE}/api/observations`,
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify(payload),
+          },
+          3500
+        );
 
-      if (res.ok) {
-        return await res.json();
+        if (res.ok) {
+          return await res.json();
+        } else {
+          backendOnline = false;
+        }
+      } catch {
+        backendOnline = false;
       }
-    } catch {
-      // Backend offline, fallback to Supabase direct insert
     }
 
     // Direct Supabase database insert
@@ -406,25 +427,28 @@ export const api = {
     limit?: number;
     offset?: number;
   }): Promise<Observation[]> {
-    // Try backend first
-    try {
-      const query = new URLSearchParams();
-      if (params?.habitat) query.append("habitat", params.habitat);
-      if (params?.species_id) query.append("species_id", params.species_id);
-      if (params?.user_only) query.append("user_only", "true");
-      if (params?.limit) query.append("limit", params.limit.toString());
-      if (params?.offset) query.append("offset", params.offset.toString());
+    if (backendOnline && API_BASE) {
+      try {
+        const query = new URLSearchParams();
+        if (params?.habitat) query.append("habitat", params.habitat);
+        if (params?.species_id) query.append("species_id", params.species_id);
+        if (params?.user_only) query.append("user_only", "true");
+        if (params?.limit) query.append("limit", params.limit.toString());
+        if (params?.offset) query.append("offset", params.offset.toString());
 
-      const headers = await getAuthHeader();
-      const res = await fetchWithTimeout(`${API_BASE}/api/observations?${query.toString()}`, {
-        headers,
-      }, 3500);
+        const headers = await getAuthHeader();
+        const res = await fetchWithTimeout(`${API_BASE}/api/observations?${query.toString()}`, {
+          headers,
+        }, 3000);
 
-      if (res.ok) {
-        return await res.json();
+        if (res.ok) {
+          return await res.json();
+        } else {
+          backendOnline = false;
+        }
+      } catch {
+        backendOnline = false;
       }
-    } catch {
-      // Backend offline, fallback to direct Supabase query
     }
 
     // Query Supabase directly
@@ -472,13 +496,17 @@ export const api = {
   },
 
   async getObservationById(id: string): Promise<Observation> {
-    try {
-      const res = await fetchWithTimeout(`${API_BASE}/api/observations/${id}`, {}, 3000);
-      if (res.ok) {
-        return await res.json();
+    if (backendOnline && API_BASE) {
+      try {
+        const res = await fetchWithTimeout(`${API_BASE}/api/observations/${id}`, {}, 2500);
+        if (res.ok) {
+          return await res.json();
+        } else {
+          backendOnline = false;
+        }
+      } catch {
+        backendOnline = false;
       }
-    } catch {
-      // Backend offline
     }
 
     try {
@@ -507,14 +535,16 @@ export const api = {
   },
 
   async deleteObservation(id: string): Promise<void> {
-    try {
-      const headers = await getAuthHeader();
-      await fetchWithTimeout(`${API_BASE}/api/observations/${id}`, {
-        method: "DELETE",
-        headers,
-      }, 3000);
-    } catch {
-      // Backend offline
+    if (backendOnline && API_BASE) {
+      try {
+        const headers = await getAuthHeader();
+        await fetchWithTimeout(`${API_BASE}/api/observations/${id}`, {
+          method: "DELETE",
+          headers,
+        }, 2500);
+      } catch {
+        backendOnline = false;
+      }
     }
 
     try {
@@ -529,17 +559,21 @@ export const api = {
 
   // 4. Species Explorer
   async getSpeciesList(query?: string, habitat?: string): Promise<SpeciesListItem[]> {
-    try {
-      const q = new URLSearchParams();
-      if (query) q.append("query", query);
-      if (habitat) q.append("habitat", habitat);
+    if (backendOnline && API_BASE) {
+      try {
+        const q = new URLSearchParams();
+        if (query) q.append("query", query);
+        if (habitat) q.append("habitat", habitat);
 
-      const res = await fetchWithTimeout(`${API_BASE}/api/species?${q.toString()}`, {}, 3000);
-      if (res.ok) {
-        return await res.json();
+        const res = await fetchWithTimeout(`${API_BASE}/api/species?${q.toString()}`, {}, 2500);
+        if (res.ok) {
+          return await res.json();
+        } else {
+          backendOnline = false;
+        }
+      } catch {
+        backendOnline = false;
       }
-    } catch {
-      // Fallback to local catalog
     }
 
     let items = Object.values(LOCAL_SPECIES_CATALOG).map((s) => ({
@@ -571,13 +605,17 @@ export const api = {
   },
 
   async getSpeciesById(id: string): Promise<Species> {
-    try {
-      const res = await fetchWithTimeout(`${API_BASE}/api/species/${id}`, {}, 3000);
-      if (res.ok) {
-        return await res.json();
+    if (backendOnline && API_BASE) {
+      try {
+        const res = await fetchWithTimeout(`${API_BASE}/api/species/${id}`, {}, 2500);
+        if (res.ok) {
+          return await res.json();
+        } else {
+          backendOnline = false;
+        }
+      } catch {
+        backendOnline = false;
       }
-    } catch {
-      // Fallback
     }
 
     const sp = LOCAL_SPECIES_CATALOG[id];
@@ -588,17 +626,22 @@ export const api = {
 
   // 5. Dashboard Analytics
   async getDashboardStats(userOnly?: boolean): Promise<ObservationStats> {
-    try {
-      const headers = await getAuthHeader();
-      const q = userOnly ? "?user_only=true" : "";
-      const res = await fetchWithTimeout(`${API_BASE}/api/dashboard${q}`, { headers }, 3500);
-      if (res.ok) {
-        return await res.json();
+    if (backendOnline && API_BASE) {
+      try {
+        const headers = await getAuthHeader();
+        const q = userOnly ? "?user_only=true" : "";
+        const res = await fetchWithTimeout(`${API_BASE}/api/dashboard${q}`, { headers }, 2500);
+        if (res.ok) {
+          return await res.json();
+        } else {
+          backendOnline = false;
+        }
+      } catch {
+        backendOnline = false;
       }
-    } catch {
-      // Fallback: Compute dynamic statistics from observations
     }
 
+    // Direct computation from Supabase & verified observations
     const observations = await this.getObservations({ limit: 150 });
 
     const totalObs = observations.length;
@@ -648,14 +691,18 @@ export const api = {
 
   // 6. Geospatial Map
   async getMapPoints(habitat?: string): Promise<MapMarkerPoint[]> {
-    try {
-      const q = habitat ? `?habitat=${encodeURIComponent(habitat)}` : "";
-      const res = await fetchWithTimeout(`${API_BASE}/api/map${q}`, {}, 3500);
-      if (res.ok) {
-        return await res.json();
+    if (backendOnline && API_BASE) {
+      try {
+        const q = habitat ? `?habitat=${encodeURIComponent(habitat)}` : "";
+        const res = await fetchWithTimeout(`${API_BASE}/api/map${q}`, {}, 2500);
+        if (res.ok) {
+          return await res.json();
+        } else {
+          backendOnline = false;
+        }
+      } catch {
+        backendOnline = false;
       }
-    } catch {
-      // Fallback
     }
 
     const observations = await this.getObservations({ habitat, limit: 100 });
@@ -686,13 +733,15 @@ export const api = {
 
   // 7. System Health
   async getSystemHealth(): Promise<{ status: string; mode: string }> {
-    try {
-      const res = await fetchWithTimeout(`${API_BASE}/api/health`, {}, 2500);
-      if (res.ok) {
-        return await res.json();
+    if (backendOnline && API_BASE) {
+      try {
+        const res = await fetchWithTimeout(`${API_BASE}/api/health`, {}, 2000);
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch {
+        // Fallback
       }
-    } catch {
-      // Offline mode
     }
     return {
       status: "online",

@@ -18,6 +18,18 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Safeguard against stale cached chunk HTML mismatches
+      window.addEventListener('error', function (e) {
+        if (e && e.target && e.target.tagName === 'SCRIPT' && e.target.src && e.target.src.includes('/assets/')) {
+          var lockKey = 'ecovision_asset_reload_' + e.target.src;
+          if (!sessionStorage.getItem(lockKey)) {
+            sessionStorage.setItem(lockKey, '1');
+            window.location.reload();
+          }
+        }
+      }, true);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

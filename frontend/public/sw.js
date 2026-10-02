@@ -1,17 +1,7 @@
-// EcoVision Service Worker for Offline Assets & Caching
-const CACHE_NAME = "ecovision-v1";
-const ASSETS_TO_CACHE = [
-  "/",
-  "/index.html",
-  "/manifest.json",
-];
+// EcoVision Service Worker for Offline Assets & Resilient Caching
+const CACHE_NAME = "ecovision-v2";
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
   self.skipWaiting();
 });
 
@@ -31,31 +21,61 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Only cache GET requests that are not API calls
-  if (event.request.method !== "GET" || event.request.url.includes("/api/")) {
+  // Only handle GET requests and skip API / external calls
+  if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+
+  // Skip API calls and cross-origin requests
+  if (url.origin !== self.location.origin || url.pathname.startsWith("/api/")) {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== "basic") {
+  // 1. Navigation requests (HTML pages): NETWORK FIRST
+  // Ensures user always gets the latest deployed index.html and fresh chunk hashes
+  if (event.request.mode === "navigate" || event.request.destination === "document") {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
           return response;
-        }
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cached) => cached || caches.match("/index.html"));
+        })
+    );
+    return;
+  }
+
+  // 2. Static hashed assets (/assets/): STALE-WHILE-REVALIDATE or CACHE FIRST
+  if (url.pathname.startsWith("/assets/")) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
         });
-        return response;
-      }).catch(() => {
-        // Fallback for offline navigation
-        if (event.request.mode === "navigate") {
-          return caches.match("/index.html");
+      })
+    );
+    return;
+  }
+
+  // 3. Other static files: Network first with cache fallback
+  event.respondWith(
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
-      });
-    })
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
