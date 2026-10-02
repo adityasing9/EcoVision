@@ -48,7 +48,16 @@ Biodiversity is collapsing worldwide at an unprecedented rate, yet tracking avia
 
 EcoVision solves this by creating a continuous observational workflow:
 
-$$\text{Field Photograph} \longrightarrow \text{PyTorch Inference} \longrightarrow \text{Confidence \& Grad-CAM} \longrightarrow \text{Ecological Context} \longrightarrow \text{Structured Journal Record} \longrightarrow \text{Geospatial Map \& Analytics}$$
+$$\text{Field Photograph} \longrightarrow \text{PyTorch Inference} \longrightarrow \text{Confidence and Grad-CAM} \longrightarrow \text{Ecological Context} \longrightarrow \text{Structured Journal Record} \longrightarrow \text{Geospatial Map and Analytics}$$
+
+```mermaid
+flowchart LR
+    A["📷 Field Photograph"] --> B["🧠 PyTorch Inference"]
+    B --> C["🎯 Confidence & Grad-CAM"]
+    C --> D["🌿 Ecological Context"]
+    D --> E["📓 Structured Journal Record"]
+    E --> F["🗺️ Geospatial Map & Analytics"]
+```
 
 By grounding image classification in ecological taxonomy, behavioral notes, and habitat classifications, sightings transform into structured datasets suitable for preliminary environmental monitoring and biodiversity education.
 
@@ -189,7 +198,7 @@ Relational PostgreSQL schema managed in Supabase:
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/adityasing9/SettleHub.git EcoVision
+git clone https://github.com/adityasing9/EcoVision.git
 cd EcoVision
 ```
 
