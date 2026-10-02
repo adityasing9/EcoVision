@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
+    "@tensorflow-models/mobilenet": "^2.1.1",
+    "@tensorflow/tfjs": "^4.22.0",
     "@types/leaflet": "^1.9.22",
     "autoprefixer": "^10.6.1",
     "leaflet": "^1.9.4",
