@@ -37,14 +37,14 @@ const SAMPLE_SPECIMENS = [
     desc: "Canopy seed disperser with casque",
   },
   {
-    name: "Peregrine Falcon",
-    url: "/species/peregrine-falcon.jpg",
-    desc: "High-speed pursuit predator",
+    name: "Spot-billed Pelican",
+    url: "/species/spot-billed-pelican.jpg",
+    desc: "Colonial wader with giant gular pouch",
   },
   {
-    name: "Greater Flamingo",
-    url: "/species/greater-flamingo.jpg",
-    desc: "Hypersaline coastal filter-feeder",
+    name: "Indian Vulture",
+    url: "/species/indian-vulture.jpg",
+    desc: "Keystone sanitation scavenger",
   },
 ];
 

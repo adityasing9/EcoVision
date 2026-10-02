@@ -56,20 +56,20 @@ const SPECIES_KEYWORDS: Record<string, string[]> = {
   "indian-peafowl": ["peafowl", "peacock", "peahen", "pavo", "cristatus"],
   "white-throated-kingfisher": ["white-throated", "kingfisher", "halcyon", "smyrnensis"],
   "great-hornbill": ["hornbill", "great-hornbill", "buceros"],
-  "rose-ringed-parakeet": ["parakeet", "parrot", "rose-ringed", "psittacula"],
+  "red-junglefowl": ["junglefowl", "gallus", "red junglefowl", "cock", "rooster"],
   "brahminy-kite": ["kite", "brahminy", "haliastur"],
   "black-crowned-night-heron": ["heron", "night-heron", "nycticorax"],
   "purple-sunbird": ["sunbird", "purple-sunbird", "cinnyris"],
   "barn-owl": ["barn-owl", "barn owl", "tyto", "alba"],
-  "peregrine-falcon": ["falcon", "peregrine", "falco"],
+  "indian-vulture": ["vulture", "gyps", "indicus", "indian vulture"],
   "black-rumped-flameback": ["flameback", "woodpecker", "dinopium"],
-  "greater-flamingo": ["flamingo", "phoenicopterus"],
+  "spot-billed-pelican": ["pelican", "spot-billed", "pelecanus", "philippensis"],
   "red-vented-bulbul": ["bulbul", "red-vented", "pycnonotus"],
   "osprey": ["osprey", "pandion"],
   "sarus-crane": ["crane", "sarus", "antigone"],
   "oriental-magpie-robin": ["magpie", "robin", "copsychus"],
   "painted-stork": ["stork", "painted-stork", "mycteria"],
-  "common-kingfisher": ["common-kingfisher", "alcedo", "atthis"],
+  "eurasian-spoonbill": ["spoonbill", "platalea", "leucorodia", "eurasian spoonbill"],
   "spotted-owlet": ["spotted-owlet", "spotted owlet", "owlet", "athene"],
   "indian-roller": ["roller", "coracias"],
   "house-sparrow": ["sparrow", "house-sparrow", "house sparrow", "passer"],
@@ -81,21 +81,28 @@ const IMAGENET_NEURAL_MAPPINGS: Record<string, Array<{ sp: string; w: number }>>
   peacock: [{ sp: "indian-peafowl", w: 5.0 }],
   peahen: [{ sp: "indian-peafowl", w: 5.0 }],
 
+  // Pelicans
+  pelican: [{ sp: "spot-billed-pelican", w: 5.5 }],
+
+  // Vultures
+  vulture: [{ sp: "indian-vulture", w: 5.5 }],
+
+  // Junglefowl / Gamebirds
+  cock: [{ sp: "red-junglefowl", w: 5.5 }],
+  hen: [{ sp: "red-junglefowl", w: 5.0 }],
+  partridge: [{ sp: "red-junglefowl", w: 3.5 }],
+  quail: [{ sp: "red-junglefowl", w: 3.0 }],
+
   // Kingfishers / Jacamars / Bee eaters
   jacamar: [
-    { sp: "white-throated-kingfisher", w: 3.5 },
-    { sp: "common-kingfisher", w: 3.5 },
-    { sp: "indian-roller", w: 3.0 },
+    { sp: "white-throated-kingfisher", w: 4.5 },
+    { sp: "indian-roller", w: 3.5 },
   ],
   "bee eater": [
-    { sp: "white-throated-kingfisher", w: 3.5 },
-    { sp: "common-kingfisher", w: 3.5 },
-    { sp: "indian-roller", w: 3.0 },
-  ],
-  kingfisher: [
     { sp: "white-throated-kingfisher", w: 4.0 },
-    { sp: "common-kingfisher", w: 4.0 },
+    { sp: "indian-roller", w: 3.5 },
   ],
+  kingfisher: [{ sp: "white-throated-kingfisher", w: 5.0 }],
   coucal: [{ sp: "white-throated-kingfisher", w: 2.5 }],
   "ruddy turnstone": [
     { sp: "white-throated-kingfisher", w: 2.5 },
@@ -153,40 +160,24 @@ const IMAGENET_NEURAL_MAPPINGS: Record<string, Array<{ sp: string; w: number }>>
     { sp: "sarus-crane", w: 2.5 },
   ],
   spoonbill: [
-    { sp: "painted-stork", w: 3.5 },
-    { sp: "greater-flamingo", w: 3.0 },
+    { sp: "eurasian-spoonbill", w: 5.5 },
+    { sp: "painted-stork", w: 2.5 },
   ],
-  flamingo: [{ sp: "greater-flamingo", w: 5.0 }],
 
   // Raptors
   kite: [
-    { sp: "brahminy-kite", w: 3.5 },
+    { sp: "brahminy-kite", w: 4.5 },
     { sp: "osprey", w: 3.5 },
-    { sp: "peregrine-falcon", w: 3.5 },
   ],
   "bald eagle": [
-    { sp: "brahminy-kite", w: 3.5 },
-    { sp: "osprey", w: 3.5 },
-    { sp: "peregrine-falcon", w: 3.5 },
+    { sp: "brahminy-kite", w: 4.0 },
+    { sp: "osprey", w: 4.0 },
   ],
-  osprey: [{ sp: "osprey", w: 5.0 }],
+  osprey: [{ sp: "osprey", w: 5.5 }],
   "sea eagle": [
-    { sp: "osprey", w: 4.5 },
+    { sp: "osprey", w: 5.0 },
     { sp: "brahminy-kite", w: 3.5 },
   ],
-  falcon: [{ sp: "peregrine-falcon", w: 5.0 }],
-  "peregrine falcon": [{ sp: "peregrine-falcon", w: 5.0 }],
-  vulture: [
-    { sp: "brahminy-kite", w: 2.5 },
-    { sp: "osprey", w: 2.5 },
-  ],
-
-  // Parrots
-  parakeet: [{ sp: "rose-ringed-parakeet", w: 5.0 }],
-  parrot: [{ sp: "rose-ringed-parakeet", w: 4.5 }],
-  lorikeet: [{ sp: "rose-ringed-parakeet", w: 4.5 }],
-  macaw: [{ sp: "rose-ringed-parakeet", w: 4.0 }],
-  cockatoo: [{ sp: "rose-ringed-parakeet", w: 4.0 }],
 
   // Woodpeckers & Hornbills
   woodpecker: [{ sp: "black-rumped-flameback", w: 5.0 }],
@@ -199,9 +190,8 @@ const IMAGENET_NEURAL_MAPPINGS: Record<string, Array<{ sp: string; w: number }>>
   robin: [{ sp: "oriental-magpie-robin", w: 4.0 }],
   magpie: [{ sp: "oriental-magpie-robin", w: 4.5 }],
   jay: [
-    { sp: "oriental-magpie-robin", w: 2.5 },
-    { sp: "black-crowned-night-heron", w: 2.5 },
-    { sp: "indian-roller", w: 2.0 },
+    { sp: "indian-roller", w: 4.5 },
+    { sp: "oriental-magpie-robin", w: 2.0 },
   ],
   brambling: [{ sp: "house-sparrow", w: 3.0 }],
   "house finch": [{ sp: "house-sparrow", w: 4.5 }],
@@ -526,18 +516,23 @@ export async function runClientInference(
   // 4. Fine-Grained Ornithological Feature Discrimination
   const { colorSignature } = inspection;
 
-  // Rose-ringed Parakeet:
-  const isParrot = /parakeet|parrot|lorikeet|macaw|cockatoo/.test(neuralSummary);
+  // Red Junglefowl:
+  const isJunglefowl = /cock|rooster|hen|partridge|quail|junglefowl/.test(neuralSummary);
   if (
-    (colorSignature.emeraldGreen >= 0.025 && isParrot) ||
-    (colorSignature.emeraldGreen >= 0.05 && !/owl|heron|crane|stork|kite|eagle|falcon/.test(neuralSummary))
+    isJunglefowl ||
+    (colorSignature.crimsonRed >= 0.012 && (colorSignature.goldenYellow >= 0.02 || colorSignature.deepBlack >= 0.06))
   ) {
-    speciesScores["rose-ringed-parakeet"] = (speciesScores["rose-ringed-parakeet"] || 0) + 4.5;
+    speciesScores["red-junglefowl"] = (speciesScores["red-junglefowl"] || 0) + 4.8;
   }
 
-  // Raptors: Peregrine Falcon vs Osprey vs Brahminy Kite
-  const isRaptor = /kite|bald eagle|vulture|falcon|osprey/.test(neuralSummary);
-  if (isRaptor || colorSignature.slateGrey >= 0.15) {
+  // Indian Vulture:
+  if (/vulture/.test(neuralSummary)) {
+    speciesScores["indian-vulture"] = (speciesScores["indian-vulture"] || 0) + 5.0;
+  }
+
+  // Raptors: Osprey vs Brahminy Kite
+  const isRaptor = /kite|bald eagle|osprey|sea eagle/.test(neuralSummary);
+  if (isRaptor || (colorSignature.slateGrey >= 0.15 && !/vulture|pelican/.test(neuralSummary))) {
     // Brahminy Kite: pure white head/chest + rich chestnut body
     if (colorSignature.pureWhite >= 0.12 && colorSignature.chestnutBrown >= 0.04) {
       speciesScores["brahminy-kite"] = (speciesScores["brahminy-kite"] || 0) + 4.8;
@@ -546,24 +541,22 @@ export async function runClientInference(
     else if (colorSignature.deepBlack >= 0.15 && colorSignature.chestnutBrown < 0.02) {
       speciesScores["osprey"] = (speciesScores["osprey"] || 0) + 4.8;
     }
-    // Peregrine Falcon: slate-grey barred back + dark helmet + low black
-    else if (colorSignature.slateGrey >= 0.15 && colorSignature.deepBlack < 0.15) {
-      speciesScores["peregrine-falcon"] = (speciesScores["peregrine-falcon"] || 0) + 4.8;
-    }
   }
 
-  // Greater Flamingo:
+  // Spot-billed Pelican:
   if (
-    /flamingo/.test(neuralSummary) ||
-    (colorSignature.vibrantPink >= 0.015 && !/owl|kite|eagle|falcon/.test(neuralSummary))
+    /pelican/.test(neuralSummary) ||
+    (colorSignature.pureWhite >= 0.18 && colorSignature.slateGrey >= 0.08 && !/owl|kite|eagle/.test(neuralSummary))
   ) {
-    speciesScores["greater-flamingo"] = (speciesScores["greater-flamingo"] || 0) + 4.5;
+    speciesScores["spot-billed-pelican"] = (speciesScores["spot-billed-pelican"] || 0) + 4.8;
   }
 
-  // Sarus Crane vs Painted Stork:
-  if (/crane|stork/.test(neuralSummary) || colorSignature.slateGrey >= 0.12) {
-    if (colorSignature.crimsonRed >= 0.002 && colorSignature.slateGrey >= 0.10) {
-      speciesScores["sarus-crane"] = (speciesScores["sarus-crane"] || 0) + 4.5;
+  // Sarus Crane vs Painted Stork vs Eurasian Spoonbill:
+  if (/crane|stork|spoonbill|gallinule/.test(neuralSummary) || colorSignature.slateGrey >= 0.10) {
+    if (/spoonbill/.test(neuralSummary) && colorSignature.pureWhite >= 0.08 && colorSignature.slateGrey < 0.09) {
+      speciesScores["eurasian-spoonbill"] = (speciesScores["eurasian-spoonbill"] || 0) + 4.8;
+    } else if (colorSignature.slateGrey >= 0.09 || /crane|gallinule/.test(neuralSummary)) {
+      speciesScores["sarus-crane"] = (speciesScores["sarus-crane"] || 0) + 4.8;
     } else if (
       colorSignature.vibrantPink >= 0.008 ||
       (colorSignature.pureWhite >= 0.20 && colorSignature.deepBlack >= 0.06)
@@ -572,16 +565,10 @@ export async function runClientInference(
     }
   }
 
-  // Common Kingfisher vs White-throated Kingfisher vs Indian Roller:
+  // White-throated Kingfisher vs Indian Roller:
   const isCoraciiform = /bee eater|jacamar|kingfisher|jay|coucal|ruddy turnstone/.test(neuralSummary);
   if (isCoraciiform || colorSignature.electricBlue >= 0.04) {
     if (
-      colorSignature.electricBlue >= 0.10 &&
-      colorSignature.chestnutBrown >= 0.015 &&
-      colorSignature.pureWhite < 0.06
-    ) {
-      speciesScores["common-kingfisher"] = (speciesScores["common-kingfisher"] || 0) + 4.8;
-    } else if (
       colorSignature.deepBlack >= 0.12 &&
       colorSignature.electricBlue >= 0.006 &&
       (colorSignature.pureWhite >= 0.06 || colorSignature.coralRed >= 0.003 || colorSignature.chestnutBrown >= 0.01)
