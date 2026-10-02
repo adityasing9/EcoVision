@@ -30,6 +30,13 @@ export const ObservationDetailModal: React.FC<Props> = ({ observation, onClose }
             src={observation.image_url}
             alt={observation.predicted_species}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              const target = e.currentTarget;
+              const fallback = observation.species_id ? `/species/${observation.species_id}.jpg` : '/species/indian-peafowl.jpg';
+              if (!target.src.includes(fallback)) {
+                target.src = fallback;
+              }
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
           <button

@@ -28,6 +28,12 @@ export const SpeciesCard: React.FC<Props> = ({ species }) => {
             alt={species.common_name}
             className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
             loading="lazy"
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (!target.src.includes(`/species/${species.id}.jpg`)) {
+                target.src = `/species/${species.id}.jpg`;
+              }
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-nature-50 text-nature-300">

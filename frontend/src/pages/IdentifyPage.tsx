@@ -23,27 +23,27 @@ import {
 const SAMPLE_SPECIMENS = [
   {
     name: "Indian Peafowl",
-    url: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80",
+    url: "/species/indian-peafowl.jpg",
     desc: "National bird of India, iridescent plumage",
   },
   {
     name: "White-throated Kingfisher",
-    url: "https://images.unsplash.com/photo-1520808663317-647b476a81b9?auto=format&fit=crop&w=800&q=80",
+    url: "/species/white-throated-kingfisher.jpg",
     desc: "Wetland & tree percher, dagger beak",
   },
   {
     name: "Great Hornbill",
-    url: "https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?auto=format&fit=crop&w=800&q=80",
+    url: "/species/great-hornbill.jpg",
     desc: "Canopy seed disperser with casque",
   },
   {
     name: "Peregrine Falcon",
-    url: "https://images.unsplash.com/photo-1606567595334-d39972c85dbe?auto=format&fit=crop&w=800&q=80",
+    url: "/species/peregrine-falcon.jpg",
     desc: "High-speed pursuit predator",
   },
   {
     name: "Greater Flamingo",
-    url: "https://images.unsplash.com/photo-1539664030485-a936c7d29c6e?auto=format&fit=crop&w=800&q=80",
+    url: "/species/greater-flamingo.jpg",
     desc: "Hypersaline coastal filter-feeder",
   },
 ];

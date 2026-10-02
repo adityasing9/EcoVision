@@ -15,7 +15,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Male has iridescent electric blue neck and breast, metallic green-bronze eye-spotted train. Female is mottled brown with white throat and pale belly.",
     conservation_status: "Least Concern (LC)",
     description: "The Indian Peafowl is celebrated for its spectacular iridescent plumage and is India's national bird. Highly adaptable to forest edges and cultivated land.",
-    image_url: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/indian-peafowl.jpg",
   },
   "white-throated-kingfisher": {
     id: "white-throated-kingfisher",
@@ -31,7 +31,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Bright chestnut head and belly, bright white throat and breast shield, turquoise-blue back and wings with black patches, massive coral-red dagger bill.",
     conservation_status: "Least Concern (LC)",
     description: "Unlike many kingfishers, this species frequently hunts far from standing water, thriving in open plains, orchards, and urban gardens.",
-    image_url: "https://images.unsplash.com/photo-1520808663317-647b476a81b9?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/white-throated-kingfisher.jpg",
   },
   "great-hornbill": {
     id: "great-hornbill",
@@ -47,7 +47,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Massive yellow bill surmounted by a U-shaped bright yellow-orange casque; black and white wings with broad white tail crossed by subterminal black band.",
     conservation_status: "Vulnerable (VU)",
     description: "One of the largest arboreal birds in Asian tropical rainforests, vulnerable to habitat fragmentation and ancient tree logging.",
-    image_url: "https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/great-hornbill.jpg",
   },
   "rose-ringed-parakeet": {
     id: "rose-ringed-parakeet",
@@ -63,7 +63,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Slender emerald-green body with extremely long graduated tail. Adult males exhibit a distinct pink and black neck collar; sharply curved red hooked beak.",
     conservation_status: "Least Concern (LC)",
     description: "A remarkably adaptable psittacine whose intelligence and social cohesion allow it to colonize both rural agricultural belts and bustling urban metropolises.",
-    image_url: "https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/rose-ringed-parakeet.jpg",
   },
   "brahminy-kite": {
     id: "brahminy-kite",
@@ -79,7 +79,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Striking contrasting plumage with rich chestnut-red back and wings, immaculate pure white head, neck, and upper breast with fine dark streaks.",
     conservation_status: "Least Concern (LC)",
     description: "A graceful medium raptor often associated with coastal lagoons, mangrove edges, and harbor channels.",
-    image_url: "https://images.unsplash.com/photo-1618172193763-c511deb635ca?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/brahminy-kite.jpg",
   },
   "black-crowned-night-heron": {
     id: "black-crowned-night-heron",
@@ -95,7 +95,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Stocky build, black crown and back, pale gray wings and white underparts. Piercing ruby-red eyes, short yellow legs, two long white head plumes during breeding.",
     conservation_status: "Least Concern (LC)",
     description: "A nocturnal ardeid species whose presence indicates healthy riparian reedbeds and functioning wetland ecosystems.",
-    image_url: "https://images.unsplash.com/photo-1579273166152-d725a4e2b755?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/black-crowned-night-heron.jpg",
   },
   "purple-sunbird": {
     id: "purple-sunbird",
@@ -111,7 +111,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Tiny size (10 cm). Breeding male appears glossy metallic bluish-black with purple sheen and tiny yellow/red pectoral tufts; non-breeding male and female are olive-brown above and pale yellow below.",
     conservation_status: "Least Concern (LC)",
     description: "The Old World ecological equivalent of hummingbirds, indispensable for floral reproduction across arid and garden landscapes.",
-    image_url: "https://images.unsplash.com/photo-1591824438708-ce405f36ba3d?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/purple-sunbird.jpg",
   },
   "barn-owl": {
     id: "barn-owl",
@@ -127,7 +127,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Distinctive heart-shaped pale facial disc, dark luminous eyes, golden-buff upperparts mottled with delicate grey specks, silky white-to-buff underparts.",
     conservation_status: "Least Concern (LC)",
     description: "A silent nocturnal hunter revered worldwide for pest control yet vulnerable to secondary poisoning from chemical agricultural rodenticides.",
-    image_url: "https://images.unsplash.com/photo-1574063413132-355dbfd83e23?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/barn-owl.jpg",
   },
   "peregrine-falcon": {
     id: "peregrine-falcon",
@@ -143,7 +143,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Bluish-slate upperparts, dark helmet and pronounced black moustache stripe contrasting with whitish cheeks and barred chest; pointed swept-back wings.",
     conservation_status: "Least Concern (LC)",
     description: "The epitome of speed and aerodynamic engineering, recovered from historical DDT-driven population collapses.",
-    image_url: "https://images.unsplash.com/photo-1606567595334-d39972c85dbe?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/peregrine-falcon.jpg",
   },
   "black-rumped-flameback": {
     id: "black-rumped-flameback",
@@ -159,7 +159,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Golden-yellow back and wings contrasting with black rump, vivid scarlet red crest, black-and-white patterned head with prominent eye stripe, speckled throat.",
     conservation_status: "Least Concern (LC)",
     description: "Also known as the Lesser Golden-backed Woodpecker, a vibrant and familiar drummer in subcontinent woodlands and urban parks.",
-    image_url: "https://images.unsplash.com/photo-1590691566903-692bf52c5888?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/black-rumped-flameback.jpg",
   },
   "greater-flamingo": {
     id: "greater-flamingo",
@@ -175,7 +175,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Tallest flamingo species (110-150 cm); delicate whitish-pink plumage with carmine wing coverts and black flight feathers; pink bill with black tip.",
     conservation_status: "Least Concern (LC)",
     description: "A magnificent hypersaline wetland specialist whose plumage colour derives from carotenoid pigments in its crustacean and algal diet.",
-    image_url: "https://images.unsplash.com/photo-1539664030485-a936c7d29c6e?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/greater-flamingo.jpg",
   },
   "red-vented-bulbul": {
     id: "red-vented-bulbul",
@@ -191,7 +191,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Dark brown body with scale-patterned chest, dark sooty black crested head, distinct white rump, and vivid crimson-red patch beneath the tail vent.",
     conservation_status: "Least Concern (LC)",
     description: "One of the most frequently observed birds in gardens and towns across tropical Asia, famous for its energetic vocalizations.",
-    image_url: "https://images.unsplash.com/photo-1600618528240-fb9fc964b853?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/red-vented-bulbul.jpg",
   },
   "osprey": {
     id: "osprey",
@@ -207,7 +207,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Deep brown upperparts, clean white underparts with dark necklace, dark brown mask across white head, long narrow wings angled like an 'M' in flight.",
     conservation_status: "Least Concern (LC)",
     description: "Known as the fish hawk, the Osprey is a master angler with evolutionary adaptations specifically engineered for aquatic plunge-diving.",
-    image_url: "https://images.unsplash.com/photo-1548802673-380ab8ebc7b7?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/osprey.jpg",
   },
   "sarus-crane": {
     id: "sarus-crane",
@@ -223,7 +223,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Tallest flying bird on Earth (up to 1.8 m tall); uniform dove-grey body, bare crimson-red head and upper neck contrasting with white crown and grey bill.",
     conservation_status: "Vulnerable (VU)",
     description: "The tallest of all flying birds and an emblem of lifelong marital fidelity in Asian cultural lore; vulnerable to wetland draining and power lines.",
-    image_url: "https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/sarus-crane.jpg",
   },
   "oriental-magpie-robin": {
     id: "oriental-magpie-robin",
@@ -239,7 +239,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Male has glossy blue-black upperparts, white belly, and bold white shoulder patch; female is slate-grey where male is black.",
     conservation_status: "Least Concern (LC)",
     description: "A charismatic songbird celebrated for musical virtuosity and confident demeanor around human habitation.",
-    image_url: "https://images.unsplash.com/photo-1612024782955-49fae79e42bb?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/oriental-magpie-robin.jpg",
   },
   "painted-stork": {
     id: "painted-stork",
@@ -255,7 +255,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Large heavy body, heavy yellow downcurved bill, bare orange-yellow face mask, white body with black breast bar, and delicate rose-pink tertial feathers.",
     conservation_status: "Near Threatened (NT)",
     description: "A distinctive broad-winged colonial wading bird that breeds in large communal mixed heronries across protected water bodies.",
-    image_url: "https://images.unsplash.com/photo-1549608276-5786777e6587?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/painted-stork.jpg",
   },
   "common-kingfisher": {
     id: "common-kingfisher",
@@ -271,7 +271,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Electric metallic cyan-blue back and crown, rich rufous-orange breast and ear patch, long dagger-like black bill (female has red base on lower mandible).",
     conservation_status: "Least Concern (LC)",
     description: "Small jewel-like river bird whose acute eyesight compensates for underwater refraction when aiming at small swimming fish.",
-    image_url: "https://images.unsplash.com/photo-1534567153574-2b12153a87f0?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/common-kingfisher.jpg",
   },
   "spotted-owlet": {
     id: "spotted-owlet",
@@ -287,7 +287,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Small, stocky (21 cm), grayish-brown plumage heavily speckled with white dots, white supercilium eyebrows, piercing golden-yellow iris, no ear tufts.",
     conservation_status: "Least Concern (LC)",
     description: "A familiar companion of old village trees and town avenues, highly tolerant of human proximity.",
-    image_url: "https://images.unsplash.com/photo-1579380656108-328e804f9970?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/spotted-owlet.jpg",
   },
   "indian-roller": {
     id: "indian-roller",
@@ -303,7 +303,7 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Dull brownish-olive when perched; explodes in flight into breathtaking flashes of luminous ultramarine and turquoise on wings and tail.",
     conservation_status: "Least Concern (LC)",
     description: "The state bird of several Indian states, famed for the sudden burst of vibrant blues revealed when taking to flight.",
-    image_url: "https://images.unsplash.com/photo-1596727147705-61a532a659bd?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/indian-roller.jpg",
   },
   "house-sparrow": {
     id: "house-sparrow",
@@ -319,6 +319,6 @@ export const LOCAL_SPECIES_CATALOG: Record<string, Species> = {
     identification_features: "Compact passerine. Male has grey crown, chestnut nape, black bib and bill, warm brown streaked mantle. Female is sandy buff-brown with pale buff eye-stripe.",
     conservation_status: "Least Concern (LC)",
     description: "Once ubiquitous across urban areas, recent declines in modern cities highlight changes in urban building designs and insect food scarcity.",
-    image_url: "https://images.unsplash.com/photo-1555169062-013468b47731?auto=format&fit=crop&w=1200&q=80",
+    image_url: "/species/house-sparrow.jpg",
   },
 };

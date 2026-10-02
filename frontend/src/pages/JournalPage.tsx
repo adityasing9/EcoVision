@@ -229,6 +229,13 @@ export const JournalPage: React.FC = () => {
                     alt={obs.predicted_species}
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     loading="lazy"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      const fallback = obs.species_id ? `/species/${obs.species_id}.jpg` : '/species/indian-peafowl.jpg';
+                      if (!target.src.includes(fallback)) {
+                        target.src = fallback;
+                      }
+                    }}
                   />
                   <div className="absolute top-3 left-3 flex gap-1.5">
                     <span className="text-[11px] font-mono bg-nature-900/80 backdrop-blur-md text-white px-2 py-0.5 rounded-full">
@@ -307,6 +314,13 @@ export const JournalPage: React.FC = () => {
                 src={obs.image_url}
                 alt={obs.predicted_species}
                 className="w-16 h-16 rounded-xl object-cover shrink-0"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  const fallback = obs.species_id ? `/species/${obs.species_id}.jpg` : '/species/indian-peafowl.jpg';
+                  if (!target.src.includes(fallback)) {
+                    target.src = fallback;
+                  }
+                }}
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">

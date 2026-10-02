@@ -104,7 +104,7 @@ export const LandingPage: React.FC = () => {
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-slate-900 aspect-[4/5] group">
                 <img
-                  src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80"
+                  src="/species/indian-peafowl.jpg"
                   alt="Indian Peafowl Specimen"
                   className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
                 />

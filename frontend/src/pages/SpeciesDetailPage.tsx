@@ -86,6 +86,12 @@ export const SpeciesDetailPage: React.FC = () => {
                 src={species.image_url}
                 alt={species.common_name}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.src.includes(`/species/${species.id}.jpg`)) {
+                    target.src = `/species/${species.id}.jpg`;
+                  }
+                }}
               />
             )}
             <div className="absolute top-4 left-4">
