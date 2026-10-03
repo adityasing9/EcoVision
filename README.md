@@ -68,6 +68,7 @@ By grounding image classification in ecological taxonomy, behavioral notes, and 
 - **Dual-Engine Computer Vision Architecture**:
   - **In-Browser Edge ML**: Client-side inference powered by MobileNet fused with real-time colorimetric extraction (crimson red, slate grey, golden yellow, chestnut brown, electric blue, pure white, deep black) for zero cold-start, privacy-preserving, camera-based identification.
   - **Cloud/Server Engine**: PyTorch ResNet-50 with extensible architecture loader (supporting MobileNet, EfficientNet, and ConvNeXt).
+- **Out-of-Distribution (OOD) & Junk Data Rejection Filter**: Automatic detection and rejection of non-avian subjects (food, tableware, household objects, furniture, background scenery) using composite ImageNet class probability thresholds and score floors, preventing spurious observations from corrupting biodiversity records.
 - **Grad-CAM Explainability**: Interactive toggle revealing convolutional layer attention heatmaps overlaid directly on the specimen photograph.
 - **Top-3 Alternative Candidates**: Exposes classification uncertainty with authentic probability bars.
 - **Confidence Tiers**: Configurable thresholds categorizing results into *Likely identified* ($\ge 80\%$), *Possible identification* ($50\%-79\%$), and *Identification uncertain* ($< 50\%$).
@@ -149,6 +150,14 @@ EcoVision implements a resilient **Dual-Engine Architecture** ensuring seamless 
   - Normalizes with ImageNet channel means `[0.485, 0.456, 0.406]` and standard deviations `[0.229, 0.224, 0.225]`.
   - Forward pass produces raw logits, passed through `torch.nn.functional.softmax` to yield authentic probabilities.
   - Computes exact Grad-CAM gradients with respect to the final convolutional feature maps.
+
+### 3. Out-Of-Distribution (OOD) & Junk Data Filtering Pipeline
+To prevent false-positive classifications on everyday non-avian objects (food, plates, furniture, domestic items, indoor scenes), EcoVision integrates a multi-layered rejection pipeline:
+- **ImageNet Avian Class Boundary**: Tracks presence and cumulative probability across all 59 ImageNet avian categories with strict word-boundary token matching.
+- **Composite Rejection Criterion**:
+  $$\text{isOOD} = (\text{totalBirdProb} < 0.035 \land \text{maxBirdProb} < 0.0035) \lor (\neg \text{hasTop5Bird} \land \text{maxBirdProb} < 0.012)$$
+- **Score Floor & Chromatic Guarding**: Colorimetric rules (e.g. wader white plumage or wader bill coloration) require verified avian signals (`hasAvianEvidence`) to prevent tableware or food items from triggering species matches. Any candidate with combined score $< 1.0$ immediately returns `is_non_bird: true` with a label of **"No Bird Detected"**.
+- **Field Journal Safeguard**: Non-bird predictions disable logging actions in `IdentifyPage` and are explicitly rejected at both frontend API and backend service layers to protect biodiversity datasets from spurious data.
 
 ---
 
@@ -286,6 +295,7 @@ Compatible with:
 2. **Coordinate Blurring**: Coordinates are rounded on public map endpoints to obscure precise nest locations of threatened or sensitive species.
 3. **No Wildlife Harassment**: Never use automated bird playback tools to flush or harass breeding birds. Keep a safe distance from nests and roosting sites.
 4. **Recorded Observation $\ne$ Proof**: Individual sightings do not substitute for multi-year peer-reviewed ecological surveys.
+5. **Data Integrity & Junk Data Filtering**: Field observations must represent real wild bird encounters. Automated non-bird and OOD filtering blocks inanimate subjects from contaminating biodiversity tracking records.
 
 ---
 
