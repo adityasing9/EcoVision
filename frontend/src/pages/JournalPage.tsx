@@ -32,9 +32,25 @@ const HABITATS: (HabitatType | "All")[] = [
   "Garden",
 ];
 
+const REMOVED_SPECIES_NAMES = [
+  "Peregrine Falcon",
+  "Greater Flamingo",
+  "Rose-ringed Parakeet",
+  "Common Kingfisher",
+];
+
 const getObservationImageSrc = (obs: Observation): string => {
   const url = (obs.image_url || "").trim();
-  if (!url || url.includes("unsplash.com") || url.includes("example.com")) {
+  const isObsolete =
+    !url ||
+    url.includes("unsplash.com") ||
+    url.includes("example.com") ||
+    url.includes("peregrine-falcon") ||
+    url.includes("greater-flamingo") ||
+    url.includes("rose-ringed-parakeet") ||
+    url.includes("common-kingfisher");
+
+  if (isObsolete) {
     return obs.species_id ? `/species/${obs.species_id}.jpg` : "/species/indian-peafowl.jpg";
   }
   return url;
@@ -81,6 +97,9 @@ export const JournalPage: React.FC = () => {
   };
 
   const filteredObservations = observations.filter((obs) => {
+    if (REMOVED_SPECIES_NAMES.includes(obs.predicted_species)) {
+      return false;
+    }
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return (

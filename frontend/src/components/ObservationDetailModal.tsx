@@ -34,14 +34,20 @@ export const ObservationDetailModal: React.FC<Props> = ({ observation, onClose }
 
   if (!observation) return null;
 
-  const displayImageUrl =
+  const isObsoleteOrInvalid =
     !observation.image_url ||
     observation.image_url.includes("unsplash") ||
-    observation.image_url.includes("example.com")
-      ? observation.species_id
-        ? `/species/${observation.species_id}.jpg`
-        : "/species/indian-peafowl.jpg"
-      : observation.image_url;
+    observation.image_url.includes("example.com") ||
+    observation.image_url.includes("peregrine-falcon") ||
+    observation.image_url.includes("greater-flamingo") ||
+    observation.image_url.includes("rose-ringed-parakeet") ||
+    observation.image_url.includes("common-kingfisher");
+
+  const displayImageUrl = isObsoleteOrInvalid
+    ? observation.species_id
+      ? `/species/${observation.species_id}.jpg`
+      : "/species/indian-peafowl.jpg"
+    : observation.image_url;
 
   return createPortal(
     <div

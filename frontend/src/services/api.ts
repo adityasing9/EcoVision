@@ -180,6 +180,44 @@ const FALLBACK_DEMO_OBSERVATIONS: Observation[] = [
     created_at: new Date(Date.now() - 86400000 * 9).toISOString(),
     species: LOCAL_SPECIES_CATALOG["purple-sunbird"],
   },
+  {
+    id: "demo-osprey-1",
+    species_id: "osprey",
+    predicted_species: "Osprey",
+    prediction_confidence: 93.8,
+    image_url: "/species/osprey.jpg",
+    latitude: 19.6700,
+    longitude: 85.3200,
+    location_name: "Chilika Lake Coastal Lagoon",
+    habitat: "Coastal",
+    observed_at: new Date(Date.now() - 86400000 * 1).toISOString(),
+    bird_count: 1,
+    behavior: "Flying",
+    environmental_notes: "Circling over shallow coastal lagoon waters before executing a steep feet-first dive to seize a mulleted fish.",
+    weather_conditions: "Breezy, 29°C, clear coastal skies",
+    is_demo: true,
+    created_at: new Date(Date.now() - 86400000 * 1).toISOString(),
+    species: LOCAL_SPECIES_CATALOG["osprey"],
+  },
+  {
+    id: "demo-painted-stork-1",
+    species_id: "painted-stork",
+    predicted_species: "Painted Stork",
+    prediction_confidence: 96.2,
+    image_url: "/species/painted-stork.jpg",
+    latitude: 12.4244,
+    longitude: 76.6953,
+    location_name: "Ranganathittu Bird Sanctuary, Karnataka",
+    habitat: "Wetland",
+    observed_at: new Date(Date.now() - 86400000 * 1.5).toISOString(),
+    bird_count: 14,
+    behavior: "Foraging",
+    environmental_notes: "Flock wading through shallow marshland with bills partially submerged in water, sweeping side-to-side to catch small fish.",
+    weather_conditions: "Humid, 27°C, calm water",
+    is_demo: true,
+    created_at: new Date(Date.now() - 86400000 * 1.5).toISOString(),
+    species: LOCAL_SPECIES_CATALOG["painted-stork"],
+  },
 ];
 
 async function getAuthHeader(): Promise<Record<string, string>> {
@@ -211,8 +249,19 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutM
 
 export function sanitizeObservation(obs: Observation): Observation {
   let img = (obs.image_url || "").trim();
-  if (!img || img.includes("unsplash.com") || img.includes("example.com")) {
-    img = obs.species_id ? `/species/${obs.species_id}.jpg` : "/species/indian-peafowl.jpg";
+  const isObsoleteOrInvalid =
+    !img ||
+    img.includes("unsplash.com") ||
+    img.includes("example.com") ||
+    img.includes("peregrine-falcon") ||
+    img.includes("greater-flamingo") ||
+    img.includes("rose-ringed-parakeet") ||
+    img.includes("common-kingfisher");
+
+  if (isObsoleteOrInvalid) {
+    img = obs.species_id && LOCAL_SPECIES_CATALOG[obs.species_id]
+      ? `/species/${obs.species_id}.jpg`
+      : "/species/indian-peafowl.jpg";
   }
   return {
     ...obs,
@@ -221,6 +270,8 @@ export function sanitizeObservation(obs: Observation): Observation {
   };
 }
 
+const REMOVED_SPECIES_NAMES = ["Peregrine Falcon", "Greater Flamingo", "Rose-ringed Parakeet", "Common Kingfisher"];
+
 function getStoredLocalObservations(): Observation[] {
   try {
     const raw = localStorage.getItem("ecovision_local_observations");
@@ -228,7 +279,12 @@ function getStoredLocalObservations(): Observation[] {
       const parsed: Observation[] = JSON.parse(raw);
       if (Array.isArray(parsed)) {
         const cleaned = parsed
-          .filter((o) => !o.location_name?.toLowerCase().includes("acceptance test"))
+          .filter((o) => {
+            if (o.location_name?.toLowerCase().includes("acceptance test")) return false;
+            if (o.species_id && !LOCAL_SPECIES_CATALOG[o.species_id]) return false;
+            if (REMOVED_SPECIES_NAMES.includes(o.predicted_species)) return false;
+            return true;
+          })
           .map(sanitizeObservation);
         localStorage.setItem("ecovision_local_observations", JSON.stringify(cleaned));
         return cleaned;
@@ -465,7 +521,12 @@ export const api = {
         if (res.ok) {
           const list: Observation[] = await res.json();
           return list
-            .filter((item) => !item.location_name?.toLowerCase().includes("acceptance test"))
+            .filter(
+              (item) =>
+                !item.location_name?.toLowerCase().includes("acceptance test") &&
+                (!item.species_id || LOCAL_SPECIES_CATALOG[item.species_id]) &&
+                !REMOVED_SPECIES_NAMES.includes(item.predicted_species)
+            )
             .map(sanitizeObservation);
         } else {
           backendOnline = false;
@@ -495,7 +556,13 @@ export const api = {
       const { data, error } = await query;
       if (!error && data && data.length > 0) {
         const mapped = data
-          .filter((item: any) => !item.location_name?.toLowerCase().includes("acceptance test"))
+          .filter(
+            (item: any) =>
+              !item.location_name?.toLowerCase().includes("acceptance test") &&
+              item.species_id &&
+              LOCAL_SPECIES_CATALOG[item.species_id] &&
+              !REMOVED_SPECIES_NAMES.includes(item.predicted_species)
+          )
           .map((item: any) =>
             sanitizeObservation({
               ...item,
