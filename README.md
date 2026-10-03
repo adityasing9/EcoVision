@@ -65,8 +65,10 @@ By grounding image classification in ecological taxonomy, behavioral notes, and 
 
 ## 4. Key Features
 
-- **Deep Learning Vision Classifier**: PyTorch ResNet-50 with extensible architecture loader (supporting MobileNet, EfficientNet, and ConvNeXt).
-- **Grad-CAM Explainability**: Interactive toggle revealing the convolutional layer attention heatmap overlaid on the bird image.
+- **Dual-Engine Computer Vision Architecture**:
+  - **In-Browser Edge ML**: Client-side inference powered by MobileNet fused with real-time colorimetric extraction (crimson red, slate grey, golden yellow, chestnut brown, electric blue, pure white, deep black) for zero cold-start, privacy-preserving, camera-based identification.
+  - **Cloud/Server Engine**: PyTorch ResNet-50 with extensible architecture loader (supporting MobileNet, EfficientNet, and ConvNeXt).
+- **Grad-CAM Explainability**: Interactive toggle revealing convolutional layer attention heatmaps overlaid directly on the specimen photograph.
 - **Top-3 Alternative Candidates**: Exposes classification uncertainty with authentic probability bars.
 - **Confidence Tiers**: Configurable thresholds categorizing results into *Likely identified* ($\ge 80\%$), *Possible identification* ($50\%-79\%$), and *Identification uncertain* ($< 50\%$).
 - **Digital Field Journal**: Full field notebook with search, habitat filtering, specimen detail modals, and personal record curation.
@@ -88,26 +90,23 @@ By grounding image classification in ecological taxonomy, behavioral notes, and 
                                   │
                                   ▼
                     ┌────────────────────────────┐
-                    │   React 18 + Vite + TS     │
+                    │    React 18 + Vite + TS    │
                     │  (Tailwind CSS + Leaflet)  │
-                    └─────────────┬──────────────┘
-                                  │ HTTPS / REST
-                                  ▼
-                    ┌────────────────────────────┐
-                    │      FastAPI Backend       │
-                    │   (Uvicorn ASGI Server)    │
-                    └───┬────────────────────┬───┘
-                        │                    │
-          ┌─────────────▼──────┐      ┌──────▼─────────────┐
-          │ PyTorch ResNet-50  │      │ Supabase Client    │
-          │ + Grad-CAM Engine  │      │ (PostgREST / HTTP) │
-          └────────────────────┘      └──┬──────────────┬──┘
-                                         │              │
-                                         ▼              ▼
-                              ┌──────────────┐   ┌─────────────┐
-                              │  PostgreSQL  │   │   Storage   │
-                              │ (RLS + SQL)  │   │  (Buckets)  │
-                              └──────────────┘   └─────────────┘
+                    ├────────────────────────────┤
+                    │   Client Edge ML Engine    │
+                    │  • MobileNet Backbone      │
+                    │  • Colorimetric Analysis   │
+                    │  • Synthetic Grad-CAM      │
+                    └───────┬────────────┬───────┘
+                            │            │ Direct PostgREST
+              HTTPS / REST  │            ▼
+                    ┌───────▼────┐   ┌────────────────────────────┐
+                    │  FastAPI   │   │      Supabase Cloud        │
+                    │  Backend   │   │  • PostgreSQL DB (RLS)     │
+                    ├────────────┤   │  • Storage (Image Buckets) │
+                    │  PyTorch   │   │  • Auth (JWT Session Tokens)
+                    │ ResNet-50  │   └────────────────────────────┘
+                    └────────────┘
 ```
 
 ---
@@ -117,6 +116,7 @@ By grounding image classification in ecological taxonomy, behavioral notes, and 
 | Layer | Technologies |
 | :--- | :--- |
 | **Frontend** | React 18, Vite, TypeScript, Tailwind CSS, React Router DOM, Lucide Icons |
+| **Client Edge ML** | MobileNet, HTML5 Canvas Colorimetric Analyzer, Synthetic Heatmap Generator |
 | **Mapping** | Leaflet, OpenStreetMap (Zero paid API keys required) |
 | **Backend API** | Python 3.10+, FastAPI, Uvicorn, Pydantic V2 |
 | **Machine Learning**| PyTorch, Torchvision, Pillow, NumPy, Scikit-learn |
@@ -125,46 +125,56 @@ By grounding image classification in ecological taxonomy, behavioral notes, and 
 | **Storage** | Supabase Storage (`bird-observations` public bucket) |
 | **Authentication** | Supabase Auth (JWT Bearer Token verification) |
 | **Testing** | Pytest, FastAPI TestClient |
-| **DevOps** | Multi-stage Dockerfile, Docker Compose |
+| **DevOps & Cloud** | Multi-stage Dockerfile, Docker Compose, Vercel Production Deployment |
 
 ---
 
-## 7. AI Methodology & Extensible Architecture
+## 7. AI Methodology & Dual-Engine Architecture
 
-The classifier is built using transfer learning on top of an ImageNet-pretrained **ResNet-50** backbone:
-1. **Model Loader Lifecycle**: Model weights are loaded once in memory when the FastAPI application starts (`app/main.py` lifespan context), avoiding request-time model instantiation latency.
-2. **Modular Architecture Factory (`ModelFactory`)**: New neural architectures (such as MobileNetV3 or EfficientNet) can be configured via `MODEL_ARCHITECTURE` environment variable without rewriting endpoints.
-3. **Inference Pipeline**:
-   - Resizes input image to $256\times 256$, applies Center Crop to $224\times 224$.
-   - Normalizes with ImageNet channel means `[0.485, 0.456, 0.406]` and standard deviations `[0.229, 0.224, 0.225]`.
-   - Forward pass produces raw logits, passed through `torch.nn.functional.softmax` to yield authentic probabilities.
-   - Computes Grad-CAM gradients w.r.t the final bottleneck convolutional block (`layer4[-1]`).
+EcoVision implements a resilient **Dual-Engine Architecture** ensuring seamless field operations under any connectivity conditions:
+
+### 1. In-Browser Edge ML Engine (Client-Side)
+- **Zero Cold Start**: Runs directly in the observer's browser via MobileNet transfer heuristics.
+- **Multimodal Feature Fusion**: Combines neural logits with real-time RGB/HSV colorimetric profiling:
+  - *Colorimetric channels*: Crimson Red, Golden Yellow, Electric/Ultramarine Blue, Chestnut Brown, Slate Grey, Pure White, and Deep Black.
+  - *Heuristic Discrimination*: Distinguishes closely-related raptors (e.g. Osprey vs. Brahminy Kite), wetland waders (Sarus Crane vs. Painted Stork vs. Eurasian Spoonbill), and woodland drummers (Black-rumped Flameback vs. Red Junglefowl).
+- **Client-Side Grad-CAM Heatmaps**: Generates focused spatial saliency overlays indicating the anatomical regions driving classification decisions.
+
+### 2. Server-Side PyTorch Deep Learning Engine (Cloud)
+- **Deep Residual Backbone**: Transfer learning based on ImageNet-pretrained **ResNet-50** (`layer4[-1]` bottleneck gradients).
+- **Model Loader Lifecycle**: Model weights are loaded once in memory when the FastAPI application starts (`app/main.py` lifespan context), avoiding request-time model instantiation latency.
+- **Modular Architecture Factory (`ModelFactory`)**: New neural architectures (such as MobileNetV3 or EfficientNet) can be configured via `MODEL_ARCHITECTURE` environment variable without rewriting endpoints.
+- **Inference Pipeline**:
+  - Resizes input image to $256\times 256$, applies Center Crop to $224\times 224$.
+  - Normalizes with ImageNet channel means `[0.485, 0.456, 0.406]` and standard deviations `[0.229, 0.224, 0.225]`.
+  - Forward pass produces raw logits, passed through `torch.nn.functional.softmax` to yield authentic probabilities.
+  - Computes exact Grad-CAM gradients with respect to the final convolutional feature maps.
 
 ---
 
 ## 8. Supported Bird Species Catalog
 
-The platform launches pre-seeded with authentic ornithological profiles:
-- **Indian Peafowl** (*Pavo cristatus*) — Phasianidae
-- **White-throated Kingfisher** (*Halcyon smyrnensis*) — Alcedinidae
+The platform launches pre-seeded with 20 authentic ornithological profiles:
+- **Indian Peafowl** (*Pavo cristatus*) — Phasianidae [Least Concern]
+- **White-throated Kingfisher** (*Halcyon smyrnensis*) — Alcedinidae [Least Concern]
 - **Great Hornbill** (*Buceros bicornis*) — Bucerotidae [Vulnerable]
-- **Rose-ringed Parakeet** (*Psittacula krameri*) — Psittaculidae
-- **Brahminy Kite** (*Haliastur indus*) — Accipitridae
-- **Black-crowned Night Heron** (*Nycticorax nycticorax*) — Ardeidae
-- **Purple Sunbird** (*Cinnyris asiaticus*) — Nectariniidae
-- **Barn Owl** (*Tyto alba*) — Tytonidae
-- **Peregrine Falcon** (*Falco peregrinus*) — Falconidae
-- **Black-rumped Flameback** (*Dinopium benghalense*) — Picidae
-- **Greater Flamingo** (*Phoenicopterus roseus*) — Phoenicopteridae
-- **Red-vented Bulbul** (*Pycnonotus cafer*) — Pycnonotidae
-- **Osprey** (*Pandion haliaetus*) — Pandionidae
+- **Red Junglefowl** (*Gallus gallus*) — Phasianidae [Least Concern]
+- **Brahminy Kite** (*Haliastur indus*) — Accipitridae [Least Concern]
+- **Black-crowned Night Heron** (*Nycticorax nycticorax*) — Ardeidae [Least Concern]
+- **Purple Sunbird** (*Cinnyris asiaticus*) — Nectariniidae [Least Concern]
+- **Barn Owl** (*Tyto alba*) — Tytonidae [Least Concern]
+- **Indian Vulture** (*Gyps indicus*) — Accipitridae [Critically Endangered]
+- **Black-rumped Flameback** (*Dinopium benghalense*) — Picidae [Least Concern]
+- **Spot-billed Pelican** (*Pelecanus philippensis*) — Pelecanidae [Near Threatened]
+- **Red-vented Bulbul** (*Pycnonotus cafer*) — Pycnonotidae [Least Concern]
+- **Osprey** (*Pandion haliaetus*) — Pandionidae [Least Concern]
 - **Sarus Crane** (*Antigone antigone*) — Gruidae [Vulnerable]
-- **Oriental Magpie-Robin** (*Copsychus saularis*) — Muscicapidae
+- **Oriental Magpie-Robin** (*Copsychus saularis*) — Muscicapidae [Least Concern]
 - **Painted Stork** (*Mycteria leucocephala*) — Ciconiidae [Near Threatened]
-- **Common Kingfisher** (*Alcedo atthis*) — Alcedinidae
-- **Spotted Owlet** (*Athene brama*) — Strigidae
-- **Indian Roller** (*Coracias benghalensis*) — Coraciidae
-- **House Sparrow** (*Passer domesticus*) — Passeridae
+- **Eurasian Spoonbill** (*Platalea leucorodia*) — Threskiornithidae [Least Concern]
+- **Spotted Owlet** (*Athene brama*) — Strigidae [Least Concern]
+- **Indian Roller** (*Coracias benghalensis*) — Coraciidae [Least Concern]
+- **House Sparrow** (*Passer domesticus*) — Passeridae [Least Concern]
 
 ---
 
