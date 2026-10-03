@@ -96,6 +96,12 @@ export const ObservationModal: React.FC<Props> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (prediction.is_non_bird || prediction.top_prediction.species_id === "non-bird") {
+      setErrorMsg("Non-avian subjects or unverified detections cannot be saved to the field journal.");
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMsg(null);
 
@@ -360,8 +366,8 @@ export const ObservationModal: React.FC<Props> = ({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl bg-nature-700 hover:bg-nature-800 text-white font-semibold text-xs flex items-center gap-2 shadow-md transition disabled:opacity-50"
+              disabled={isSubmitting || prediction.is_non_bird || prediction.top_prediction.species_id === "non-bird"}
+              className="px-5 py-2.5 rounded-xl bg-nature-700 hover:bg-nature-800 text-white font-semibold text-xs flex items-center gap-2 shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>

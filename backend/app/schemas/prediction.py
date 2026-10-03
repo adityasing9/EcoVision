@@ -24,6 +24,7 @@ class PredictionResult(BaseModel):
     confidence_level: ConfidenceLevel
     threshold_applied: float
     is_uncertain: bool
+    is_non_bird: bool = False
     guidance_message: str
     species_details: Optional[SpeciesResponse] = None
     gradcam_heatmap: Optional[str] = Field(None, description="Base64 encoded Grad-CAM attention overlay PNG")

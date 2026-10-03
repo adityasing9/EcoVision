@@ -75,6 +75,32 @@ const SPECIES_KEYWORDS: Record<string, string[]> = {
   "house-sparrow": ["sparrow", "house-sparrow", "house sparrow", "passer"],
 };
 
+/** ImageNet avian classes for Out-Of-Distribution (OOD) non-bird filtering */
+const IMAGENET_BIRD_TERMS: string[] = [
+  "cock", "hen", "ostrich", "brambling", "goldfinch", "house finch", "junco", "indigo bunting",
+  "robin", "bulbul", "jay", "magpie", "chickadee", "water ouzel", "kite", "bald eagle", "vulture",
+  "great grey owl", "owl", "black grouse", "ptarmigan", "ruffed grouse", "prairie chicken",
+  "peacock", "peahen", "quail", "partridge", "african grey", "macaw", "cockatoo",
+  "lorikeet", "coucal", "bee eater", "hornbill", "hummingbird", "jacamar", "toucan", "drake",
+  "merganser", "goose", "black swan", "stork", "spoonbill",
+  "flamingo", "heron", "egret", "bittern", "crane", "limpkin",
+  "gallinule", "coot", "bustard", "turnstone", "sandpiper",
+  "redshank", "dowitcher", "oystercatcher", "pelican", "penguin", "albatross"
+];
+
+function isAvianClass(className: string): boolean {
+  const lower = className.toLowerCase();
+  // Filter out false positive substring matches like mushroom "hen-of-the-woods" or object "birdhouse"
+  if (lower.includes("hen-of-the-woods") || lower.includes("birdhouse")) {
+    return false;
+  }
+  for (const term of IMAGENET_BIRD_TERMS) {
+    const rx = new RegExp(`\\b${term}\\b`, "i");
+    if (rx.test(lower)) return true;
+  }
+  return false;
+}
+
 /** ImageNet class mapping to candidate EcoVision species with calibrated weights */
 const IMAGENET_NEURAL_MAPPINGS: Record<string, Array<{ sp: string; w: number }>> = {
   // Peafowl
@@ -473,6 +499,9 @@ export async function runClientInference(
 
   let neuralSummary = "";
   let allPreds: Array<{ className: string; probability: number }> = [];
+  let maxBirdProb = 0.0;
+  let totalBirdProb = 0.0;
+  let hasTop5Bird = false;
 
   // 2. Run Deep Neural Network Classification via MobileNet across multiple scales
   try {
@@ -487,22 +516,73 @@ export async function runClientInference(
 
       allPreds = [...centerPreds, ...fullPreds, ...focalPreds];
 
+      // Check top-5 predictions of each crop scale for avian indicators
+      for (const scalePreds of [centerPreds, fullPreds, focalPreds]) {
+        for (let i = 0; i < Math.min(scalePreds.length, 5); i++) {
+          if (isAvianClass(scalePreds[i].className)) {
+            hasTop5Bird = true;
+            break;
+          }
+        }
+      }
+
       for (const pred of allPreds) {
         const labelLower = pred.className.toLowerCase();
+        if (labelLower.includes("hen-of-the-woods") || labelLower.includes("birdhouse")) {
+          continue;
+        }
+
+        if (isAvianClass(pred.className)) {
+          if (pred.probability > maxBirdProb) {
+            maxBirdProb = pred.probability;
+          }
+          totalBirdProb += pred.probability;
+        }
+
         neuralSummary += " " + labelLower;
         const prob = pred.probability;
 
-        // Match against calibrated ImageNet neural mappings
+        // Match against calibrated ImageNet neural mappings with word boundary regex
         for (const [pattern, targets] of Object.entries(IMAGENET_NEURAL_MAPPINGS)) {
           // Prevent substring collision: "cock" should not match inside "peacock", "hen" should not match inside "peahen"
           if (pattern === "cock" && labelLower.includes("peacock")) continue;
           if (pattern === "hen" && labelLower.includes("peahen")) continue;
-          if (labelLower.includes(pattern)) {
+          const rx = new RegExp(`\\b${pattern}\\b`, "i");
+          if (rx.test(labelLower)) {
             for (const target of targets) {
               speciesScores[target.sp] = (speciesScores[target.sp] || 0) + prob * target.w;
             }
           }
         }
+      }
+
+      // Out-Of-Distribution (OOD) / Non-Bird / Junk filter check
+      const isOODNonBird =
+        (totalBirdProb < 0.035 && maxBirdProb < 0.0035) ||
+        (!hasTop5Bird && maxBirdProb < 0.012);
+
+      if (isOODNonBird) {
+        return {
+          top_prediction: {
+            species_id: "non-bird",
+            common_name: "No Bird Detected",
+            scientific_name: "Non-avian subject / Out-of-Distribution",
+            confidence: 0.08,
+            confidence_percentage: 8.0,
+          },
+          alternative_predictions: [],
+          confidence_level: "Identification uncertain",
+          threshold_applied: 0.6,
+          is_uncertain: true,
+          is_non_bird: true,
+          guidance_message:
+            "No avian species detected in this image. The system detected everyday non-avian objects, food, or background scenery. Please photograph a wild bird clearly in frame.",
+          species_details: undefined,
+          gradcam_heatmap: undefined,
+          model_architecture: "MobileNetV2 Out-of-Distribution (OOD) Filter",
+          disclaimer:
+            "EcoVision AI filters out non-avian images to preserve journal integrity. Sighting logs can only be created for verified bird observations.",
+        };
       }
     }
   } catch (err) {
@@ -531,6 +611,13 @@ export async function runClientInference(
 
   // 4. Fine-Grained Ornithological Feature Discrimination
   const { colorSignature } = inspection;
+  const hasAvianEvidence =
+    allPreds.length === 0 || // If net was not loaded, allow fallback
+    hasTop5Bird ||
+    maxBirdProb >= 0.012 ||
+    /peacock|peahen|quill|vulture|osprey|pelican|stork|spoonbill|crane|owl|bulbul|robin|magpie|jay|hornbill|sunbird|kingfisher|sparrow/.test(
+      neuralSummary
+    );
 
   // Indian Peafowl neural signature detection:
   const isPeafowlNeural = allPreds.some(
@@ -540,6 +627,7 @@ export async function runClientInference(
   // Black-rumped Flameback detection (woodpecker with scarlet crest, golden mantle, black-and-white face):
   const isFlameback =
     !isPeafowlNeural &&
+    hasAvianEvidence &&
     (((colorSignature.crimsonRed >= 0.015 || colorSignature.coralRed >= 0.005) &&
       colorSignature.goldenYellow >= 0.015 &&
       colorSignature.deepBlack >= 0.08) ||
@@ -556,6 +644,7 @@ export async function runClientInference(
   if (
     !isPeafowlNeural &&
     !isFlameback &&
+    hasAvianEvidence &&
     (isJunglefowl ||
       (colorSignature.crimsonRed >= 0.015 && (colorSignature.goldenYellow >= 0.02 || colorSignature.deepBlack >= 0.06)))
   ) {
@@ -589,18 +678,22 @@ export async function runClientInference(
   // Spot-billed Pelican:
   if (
     /pelican/.test(neuralSummary) ||
-    (colorSignature.pureWhite >= 0.18 && colorSignature.slateGrey >= 0.08 && !/owl|kite|eagle/.test(neuralSummary))
+    (hasAvianEvidence &&
+      colorSignature.pureWhite >= 0.18 &&
+      colorSignature.slateGrey >= 0.08 &&
+      !/owl|kite|eagle/.test(neuralSummary))
   ) {
     speciesScores["spot-billed-pelican"] = (speciesScores["spot-billed-pelican"] || 0) + 4.8;
   }
 
   // Painted Stork vs Eurasian Spoonbill vs Sarus Crane:
   const isPaintedStork =
-    colorSignature.vibrantPink >= 0.006 ||
-    ((colorSignature.goldenYellow >= 0.025 || colorSignature.coralRed >= 0.004) &&
-      colorSignature.pureWhite >= 0.08 &&
-      colorSignature.deepBlack >= 0.03 &&
-      /stork|spoonbill/.test(neuralSummary));
+    hasAvianEvidence &&
+    (colorSignature.vibrantPink >= 0.006 ||
+      ((colorSignature.goldenYellow >= 0.025 || colorSignature.coralRed >= 0.004) &&
+        colorSignature.pureWhite >= 0.08 &&
+        colorSignature.deepBlack >= 0.03 &&
+        /stork|spoonbill/.test(neuralSummary)));
 
   const hasCraneStrong = allPreds.some(
     (p) => /crane|gallinule/.test(p.className.toLowerCase()) && p.probability >= 0.04
@@ -618,6 +711,7 @@ export async function runClientInference(
     speciesScores["sarus-crane"] = (speciesScores["sarus-crane"] || 0) + 5.2;
   } else if (
     !isPaintedStork &&
+    hasAvianEvidence &&
     (hasSpoonStrong ||
       ((/spoonbill|egret/.test(neuralSummary) ||
         (colorSignature.pureWhite >= 0.12 && !/kite|owl|bulbul|magpie|hornbill/.test(neuralSummary))) &&
@@ -630,7 +724,8 @@ export async function runClientInference(
   const isCoraciiform = /bee eater|jacamar|kingfisher|jay|coucal|ruddy turnstone/.test(neuralSummary);
   if (
     isCoraciiform ||
-    (!isPeafowlNeural &&
+    (hasAvianEvidence &&
+      !isPeafowlNeural &&
       colorSignature.electricBlue >= 0.04 &&
       colorSignature.pureWhite < 0.10 &&
       !/spoonbill|stork|crane|heron|pelican/.test(neuralSummary))
@@ -643,7 +738,8 @@ export async function runClientInference(
       speciesScores["white-throated-kingfisher"] = (speciesScores["white-throated-kingfisher"] || 0) + 5.0;
     } else if (
       allPreds.some((p) => /bee eater|jay/.test(p.className.toLowerCase()) && p.probability >= 0.05) ||
-      (!isPeafowlNeural &&
+      (hasAvianEvidence &&
+        !isPeafowlNeural &&
         colorSignature.electricBlue >= 0.02 &&
         colorSignature.chestnutBrown < 0.01 &&
         !allPreds.some((p) => /indigo bunting|sunbird/.test(p.className.toLowerCase()) && p.probability >= 0.08))
@@ -666,6 +762,7 @@ export async function runClientInference(
 
   // Purple Sunbird:
   if (
+    hasAvianEvidence &&
     !isPeafowlNeural &&
     !/spoonbill|stork|crane|heron|pelican|vulture|kite|eagle/.test(neuralSummary) &&
     colorSignature.electricBlue >= 0.02 &&
@@ -689,7 +786,8 @@ export async function runClientInference(
   // Indian Peafowl:
   if (
     isPeafowlNeural ||
-    ((colorSignature.emeraldGreen >= 0.04 || colorSignature.electricBlue >= 0.03) &&
+    (hasAvianEvidence &&
+      (colorSignature.emeraldGreen >= 0.04 || colorSignature.electricBlue >= 0.03) &&
       colorSignature.goldenYellow >= 0.04)
   ) {
     speciesScores["indian-peafowl"] = (speciesScores["indian-peafowl"] || 0) + 4.8;
@@ -697,7 +795,7 @@ export async function runClientInference(
 
   // Great Hornbill:
   if (
-    (colorSignature.goldenYellow >= 0.05 && colorSignature.deepBlack >= 0.15) ||
+    (hasAvianEvidence && colorSignature.goldenYellow >= 0.05 && colorSignature.deepBlack >= 0.15) ||
     neuralSummary.includes("hornbill") ||
     neuralSummary.includes("toucan")
   ) {
@@ -716,7 +814,8 @@ export async function runClientInference(
 
   // Oriental Magpie-Robin:
   if (
-    (colorSignature.pureWhite >= 0.15 &&
+    (hasAvianEvidence &&
+      colorSignature.pureWhite >= 0.15 &&
       colorSignature.deepBlack >= 0.15 &&
       colorSignature.buffTan < 0.008 &&
       colorSignature.electricBlue < 0.005 &&
@@ -755,6 +854,32 @@ export async function runClientInference(
     .sort((a, b) => b.score - a.score);
 
   const top = ranked[0];
+
+  // If no species achieved a valid detection threshold (< 1.0), classify as Non-Bird
+  if (!top || top.score < 1.0) {
+    return {
+      top_prediction: {
+        species_id: "non-bird",
+        common_name: "No Bird Detected",
+        scientific_name: "Non-avian subject / Out-of-Distribution",
+        confidence: 0.08,
+        confidence_percentage: 8.0,
+      },
+      alternative_predictions: [],
+      confidence_level: "Identification uncertain",
+      threshold_applied: 0.6,
+      is_uncertain: true,
+      is_non_bird: true,
+      guidance_message:
+        "No avian species detected in this image. The system detected everyday non-avian objects, food, or background scenery. Please photograph a wild bird clearly in frame.",
+      species_details: undefined,
+      gradcam_heatmap: undefined,
+      model_architecture: "ResNet-50 / MobileNet Neural Vision Engine",
+      disclaimer:
+        "EcoVision AI filters out non-avian images to preserve journal integrity. Sighting logs can only be created for verified bird observations.",
+    };
+  }
+
   const alternatives = ranked.slice(1, 3);
   const second = ranked[1] || { score: 0 };
   const margin = top.score - second.score;

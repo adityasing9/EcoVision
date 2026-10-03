@@ -28,6 +28,9 @@ class ObservationService:
         user_email: Optional[str] = None,
     ) -> ObservationResponse:
         """Stores a new biodiversity observation."""
+        if data.species_id == "non-bird" or data.predicted_species == "No Bird Detected":
+            raise ValueError("Cannot log non-bird or unrecognized subject to the field journal.")
+
         supabase = get_supabase_client()
         obs_dict = data.model_dump()
         obs_dict["user_id"] = user_id

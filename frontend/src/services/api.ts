@@ -401,6 +401,10 @@ export const api = {
 
   // 3. Observations CRUD
   async createObservation(payload: ObservationCreatePayload): Promise<Observation> {
+    if (payload.species_id === "non-bird" || payload.predicted_species === "No Bird Detected") {
+      throw new Error("Cannot log non-bird or unrecognized subject to the field journal.");
+    }
+
     if (backendOnline && API_BASE) {
       try {
         const headers = {

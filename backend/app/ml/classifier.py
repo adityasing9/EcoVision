@@ -105,6 +105,7 @@ class BirdClassifierService:
         high_th = settings.CONFIDENCE_HIGH_THRESHOLD
         med_th = settings.CONFIDENCE_MEDIUM_THRESHOLD
 
+        is_non_bird = False
         if top_pred.confidence >= high_th:
             confidence_level = ConfidenceLevel.HIGH
             is_uncertain = False
@@ -122,14 +123,28 @@ class BirdClassifierService:
         else:
             confidence_level = ConfidenceLevel.LOW
             is_uncertain = True
-            guidance = (
-                f"Low confidence ({top_pred.confidence_percentage}%). Identification is uncertain due to distance, "
-                f"obstruction, lighting, or plumage variation. Consult local field guides or expert ornithologists."
-            )
+            if top_pred.confidence < 0.20:
+                is_non_bird = True
+                guidance = (
+                    "No bird detected or subject is highly uncertain. The image appears to contain everyday objects, "
+                    "food, or non-avian scenery. Please photograph a wild bird clearly in frame."
+                )
+                top_pred = PredictionCandidate(
+                    species_id="non-bird",
+                    common_name="No Bird Detected",
+                    scientific_name="Non-avian subject / Out-of-Distribution",
+                    confidence=round(top_pred.confidence, 4),
+                    confidence_percentage=round(top_pred.confidence * 100.0, 1),
+                )
+            else:
+                guidance = (
+                    f"Low confidence ({top_pred.confidence_percentage}%). Identification is uncertain due to distance, "
+                    f"obstruction, lighting, or plumage variation. Consult local field guides or expert ornithologists."
+                )
 
         # Grad-CAM explainability
         gradcam_b64 = None
-        if include_gradcam:
+        if include_gradcam and not is_non_bird:
             try:
                 target_layer = self.model.get_target_layer_for_gradcam()
                 top_class_idx = top_indices[0].item()
@@ -145,14 +160,15 @@ class BirdClassifierService:
 
         # Fetch species details
         species_info_dict = get_species_by_id(top_pred.species_id)
-        species_resp = SpeciesResponse(**species_info_dict) if species_info_dict else None
+        species_resp = SpeciesResponse(**species_info_dict) if (species_info_dict and not is_non_bird) else None
 
         return PredictionResult(
             top_prediction=top_pred,
-            alternative_predictions=alt_preds,
+            alternative_predictions=alt_preds if not is_non_bird else [],
             confidence_level=confidence_level,
             threshold_applied=high_th if confidence_level == ConfidenceLevel.HIGH else med_th,
             is_uncertain=is_uncertain,
+            is_non_bird=is_non_bird,
             guidance_message=guidance,
             species_details=species_resp,
             gradcam_heatmap=gradcam_b64,

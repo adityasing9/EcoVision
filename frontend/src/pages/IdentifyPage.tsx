@@ -342,6 +342,7 @@ export const IdentifyPage: React.FC = () => {
                       level={prediction.confidence_level}
                       percentage={prediction.top_prediction.confidence_percentage}
                       size="md"
+                      isNonBird={prediction.is_non_bird}
                     />
                     <span className="text-xs font-mono text-slate-400">
                       {prediction.model_architecture.toUpperCase()}
@@ -355,92 +356,136 @@ export const IdentifyPage: React.FC = () => {
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setIsLogModalOpen(true)}
-                  className="px-5 py-3 rounded-2xl bg-nature-800 hover:bg-nature-700 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-md transition shrink-0"
-                >
-                  <BookOpen className="w-4 h-4 text-nature-300" />
-                  <span>Log to Field Journal</span>
-                </button>
+                {prediction.is_non_bird ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="px-5 py-3 rounded-2xl bg-slate-100 text-slate-400 border border-slate-200 font-semibold text-xs flex items-center justify-center gap-2 cursor-not-allowed shrink-0"
+                    title="Non-avian subjects cannot be saved to the field journal"
+                  >
+                    <ShieldAlert className="w-4 h-4 text-rose-500" />
+                    <span>Logging Disabled (Non-Bird)</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsLogModalOpen(true)}
+                    className="px-5 py-3 rounded-2xl bg-nature-800 hover:bg-nature-700 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-md transition shrink-0"
+                  >
+                    <BookOpen className="w-4 h-4 text-nature-300" />
+                    <span>Log to Field Journal</span>
+                  </button>
+                )}
               </div>
 
               {/* Guidance Message Note */}
-              <div className="p-3.5 rounded-2xl bg-parchment-100 border border-parchment-300 text-xs text-slate-700 flex items-start gap-2.5">
-                <Info className="w-4 h-4 text-nature-700 shrink-0 mt-0.5" />
-                <span className="leading-relaxed">{prediction.guidance_message}</span>
-              </div>
-
-              {/* Grad-CAM Heatmap Viewer */}
-              {previewUrl && (
-                <div className="space-y-2">
-                  <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">
-                    Explainability & AI Visual Focus
-                  </h4>
-                  <GradCamViewer
-                    originalImage={previewUrl}
-                    gradcamImage={prediction.gradcam_heatmap}
-                    speciesName={prediction.top_prediction.common_name}
-                  />
+              {prediction.is_non_bird ? (
+                <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-900 flex items-start gap-3">
+                  <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <strong className="block font-semibold text-rose-950">Out-Of-Distribution Subject Filtered</strong>
+                    <span className="leading-relaxed block">{prediction.guidance_message}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3.5 rounded-2xl bg-parchment-100 border border-parchment-300 text-xs text-slate-700 flex items-start gap-2.5">
+                  <Info className="w-4 h-4 text-nature-700 shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{prediction.guidance_message}</span>
                 </div>
               )}
 
-              {/* Top 3 Alternative Predictions */}
-              <div className="space-y-3 pt-2">
-                <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">
-                  Candidate Probability Distribution (Top-3)
-                </h4>
-                <div className="space-y-2">
-                  {/* Top 1 Bar */}
-                  <div className="bg-nature-50 border border-nature-200 rounded-xl p-3">
-                    <div className="flex justify-between items-center text-xs mb-1.5">
-                      <span className="font-semibold text-nature-950">
-                        1. {prediction.top_prediction.common_name}{" "}
-                        <span className="italic text-slate-500 font-normal">
-                          ({prediction.top_prediction.scientific_name})
-                        </span>
-                      </span>
-                      <span className="font-mono font-bold text-nature-900">
-                        {prediction.top_prediction.confidence_percentage}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-nature-200/80 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="bg-nature-700 h-full rounded-full transition-all duration-500"
-                        style={{
-                          width: `${prediction.top_prediction.confidence_percentage}%`,
-                        }}
+              {/* Non-Bird notice vs Avian Diagnostics (Grad-CAM & Candidates) */}
+              {prediction.is_non_bird ? (
+                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto">
+                    <ShieldAlert className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1 max-w-md mx-auto">
+                    <h4 className="font-serif font-bold text-base text-slate-900">
+                      Non-Avian Subject Filter Active
+                    </h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      EcoVision automatically rejects everyday household objects, food items, tableware, and non-avian background scenes to protect field journal data integrity.
+                    </p>
+                    <p className="text-xs text-slate-500 font-mono pt-1">
+                      Tip: Capture a wild bird clearly in good lighting, showing head, bill, or wings.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Grad-CAM Heatmap Viewer */}
+                  {previewUrl && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">
+                        Explainability & AI Visual Focus
+                      </h4>
+                      <GradCamViewer
+                        originalImage={previewUrl}
+                        gradcamImage={prediction.gradcam_heatmap}
+                        speciesName={prediction.top_prediction.common_name}
                       />
                     </div>
-                  </div>
+                  )}
 
-                  {/* Alternatives */}
-                  {prediction.alternative_predictions.map((alt, i) => (
-                    <div
-                      key={alt.species_id}
-                      className="bg-slate-50 border border-slate-200 rounded-xl p-3"
-                    >
-                      <div className="flex justify-between items-center text-xs mb-1.5">
-                        <span className="text-slate-700">
-                          {i + 2}. {alt.common_name}{" "}
-                          <span className="italic text-slate-400 font-normal">
-                            ({alt.scientific_name})
+                  {/* Top 3 Alternative Predictions */}
+                  <div className="space-y-3 pt-2">
+                    <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">
+                      Candidate Probability Distribution (Top-3)
+                    </h4>
+                    <div className="space-y-2">
+                      {/* Top 1 Bar */}
+                      <div className="bg-nature-50 border border-nature-200 rounded-xl p-3">
+                        <div className="flex justify-between items-center text-xs mb-1.5">
+                          <span className="font-semibold text-nature-950">
+                            1. {prediction.top_prediction.common_name}{" "}
+                            <span className="italic text-slate-500 font-normal">
+                              ({prediction.top_prediction.scientific_name})
+                            </span>
                           </span>
-                        </span>
-                        <span className="font-mono text-slate-600">
-                          {alt.confidence_percentage}%
-                        </span>
+                          <span className="font-mono font-bold text-nature-900">
+                            {prediction.top_prediction.confidence_percentage}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-nature-200/80 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="bg-nature-700 h-full rounded-full transition-all duration-500"
+                            style={{
+                              width: `${prediction.top_prediction.confidence_percentage}%`,
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+
+                      {/* Alternatives */}
+                      {prediction.alternative_predictions.map((alt, i) => (
                         <div
-                          className="bg-slate-400 h-full rounded-full transition-all duration-500"
-                          style={{ width: `${alt.confidence_percentage}%` }}
-                        />
-                      </div>
+                          key={alt.species_id}
+                          className="bg-slate-50 border border-slate-200 rounded-xl p-3"
+                        >
+                          <div className="flex justify-between items-center text-xs mb-1.5">
+                            <span className="text-slate-700">
+                              {i + 2}. {alt.common_name}{" "}
+                              <span className="italic text-slate-400 font-normal">
+                                ({alt.scientific_name})
+                              </span>
+                            </span>
+                            <span className="font-mono text-slate-600">
+                              {alt.confidence_percentage}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className="bg-slate-400 h-full rounded-full transition-all duration-500"
+                              style={{ width: `${alt.confidence_percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
+                </>
+              )}
 
               {/* Species Ecological Monograph Preview */}
               {prediction.species_details && (

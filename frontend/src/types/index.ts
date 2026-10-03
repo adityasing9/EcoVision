@@ -46,6 +46,7 @@ export interface PredictionResult {
   confidence_level: ConfidenceLevel;
   threshold_applied: number;
   is_uncertain: boolean;
+  is_non_bird?: boolean;
   guidance_message: string;
   species_details?: Species;
   gradcam_heatmap?: string;
