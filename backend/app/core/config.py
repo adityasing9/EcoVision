@@ -21,6 +21,8 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://127.0.0.1:5173",
         "http://localhost:4173",
+        "https://ecovisionai.vercel.app",
+        "https://ecovision-kappa.vercel.app",
     ]
 
     @field_validator("ALLOWED_ORIGINS", mode="before")

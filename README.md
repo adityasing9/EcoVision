@@ -1,6 +1,6 @@
 # EcoVision — AI-Powered Bird Biodiversity & Environmental Monitoring Platform
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://ecovision-kappa.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://ecovisionai.vercel.app/)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-EcoVision-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/adityasing9/EcoVision)
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)](https://python.org)
@@ -14,7 +14,7 @@
 > **"See. Identify. Understand Biodiversity."**  
 > *EcoVision is an AI-assisted biodiversity monitoring platform that identifies bird species from images and transforms wildlife observations into structured ecological data for biodiversity awareness, environmental education, and preliminary environmental monitoring.*
 
-🌐 **Live Web Application:** [https://ecovision-kappa.vercel.app](https://ecovision-kappa.vercel.app)  
+🌐 **Live Web Application:** [https://ecovisionai.vercel.app/](https://ecovisionai.vercel.app/)  
 📦 **GitHub Repository:** [https://github.com/adityasing9/EcoVision](https://github.com/adityasing9/EcoVision)
 
 ---
