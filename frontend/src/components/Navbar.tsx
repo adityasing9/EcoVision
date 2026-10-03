@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Sparkles,
+  Download,
 } from "lucide-react";
 import { AuthModal } from "./AuthModal";
 
@@ -22,6 +23,25 @@ export const Navbar: React.FC = () => {
   const location = useLocation();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") {
+      setDeferredPrompt(null);
+    }
+  };
 
   const navLinks = [
     { label: "Identify Bird", path: "/identify", icon: Camera },
@@ -82,6 +102,17 @@ export const Navbar: React.FC = () => {
 
           {/* Right Action Area */}
           <div className="hidden sm:flex items-center gap-3">
+            {deferredPrompt && (
+              <button
+                onClick={handleInstallClick}
+                className="px-3 py-1.5 rounded-xl bg-nature-100 hover:bg-nature-200 text-nature-900 border border-nature-300 font-semibold text-xs flex items-center gap-1.5 transition shadow-xs"
+                title="Install EcoVision App (Badge-Free PWA)"
+              >
+                <Download className="w-3.5 h-3.5 text-nature-700" />
+                <span>Install App</span>
+              </button>
+            )}
+
             {user ? (
               <div className="flex items-center gap-2">
                 <div className="px-3 py-1.5 rounded-xl bg-nature-50 border border-nature-200 flex items-center gap-2 text-xs">
@@ -142,6 +173,19 @@ export const Navbar: React.FC = () => {
                 </Link>
               );
             })}
+
+            {deferredPrompt && (
+              <button
+                onClick={() => {
+                  handleInstallClick();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold text-xs flex items-center justify-center gap-2 transition mb-2"
+              >
+                <Download className="w-4 h-4 text-emerald-700" />
+                <span>Install EcoVision App (Standalone)</span>
+              </button>
+            )}
 
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
               {user ? (
