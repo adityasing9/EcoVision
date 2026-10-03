@@ -100,11 +100,15 @@ const IMAGENET_NEURAL_MAPPINGS: Record<string, Array<{ sp: string; w: number }>>
     { sp: "indian-roller", w: 3.5 },
   ],
   "bee eater": [
-    { sp: "white-throated-kingfisher", w: 4.0 },
-    { sp: "indian-roller", w: 3.5 },
+    { sp: "white-throated-kingfisher", w: 4.5 },
+    { sp: "indian-roller", w: 4.5 },
   ],
   kingfisher: [{ sp: "white-throated-kingfisher", w: 5.0 }],
-  coucal: [{ sp: "white-throated-kingfisher", w: 2.5 }],
+  coucal: [
+    { sp: "black-rumped-flameback", w: 4.8 },
+    { sp: "white-throated-kingfisher", w: 2.0 },
+  ],
+  macaw: [{ sp: "black-rumped-flameback", w: 4.5 }],
   "ruddy turnstone": [
     { sp: "white-throated-kingfisher", w: 2.5 },
     { sp: "oriental-magpie-robin", w: 1.5 },
@@ -137,9 +141,13 @@ const IMAGENET_NEURAL_MAPPINGS: Record<string, Array<{ sp: string; w: number }>>
   "little blue heron": [{ sp: "black-crowned-night-heron", w: 5.0 }],
   heron: [{ sp: "black-crowned-night-heron", w: 4.5 }],
   bittern: [{ sp: "black-crowned-night-heron", w: 4.5 }],
+  "American egret": [
+    { sp: "eurasian-spoonbill", w: 5.0 },
+    { sp: "black-crowned-night-heron", w: 2.0 },
+  ],
   egret: [
-    { sp: "black-crowned-night-heron", w: 4.0 },
-    { sp: "painted-stork", w: 2.0 },
+    { sp: "eurasian-spoonbill", w: 4.5 },
+    { sp: "black-crowned-night-heron", w: 2.5 },
   ],
   "night-heron": [{ sp: "black-crowned-night-heron", w: 5.0 }],
 
@@ -148,18 +156,16 @@ const IMAGENET_NEURAL_MAPPINGS: Record<string, Array<{ sp: string; w: number }>>
     { sp: "sarus-crane", w: 4.5 },
     { sp: "black-crowned-night-heron", w: 2.5 },
   ],
+  "European gallinule": [{ sp: "sarus-crane", w: 4.0 }],
   "white stork": [
-    { sp: "painted-stork", w: 5.0 },
-    { sp: "sarus-crane", w: 2.5 },
+    { sp: "painted-stork", w: 5.5 },
+    { sp: "sarus-crane", w: 2.0 },
   ],
   "black stork": [
-    { sp: "painted-stork", w: 3.5 },
-    { sp: "black-crowned-night-heron", w: 2.5 },
+    { sp: "painted-stork", w: 5.5 },
+    { sp: "black-crowned-night-heron", w: 2.0 },
   ],
-  stork: [
-    { sp: "painted-stork", w: 4.5 },
-    { sp: "sarus-crane", w: 2.5 },
-  ],
+  stork: [{ sp: "painted-stork", w: 5.0 }],
   spoonbill: [
     { sp: "eurasian-spoonbill", w: 5.5 },
     { sp: "painted-stork", w: 2.5 },
@@ -167,24 +173,29 @@ const IMAGENET_NEURAL_MAPPINGS: Record<string, Array<{ sp: string; w: number }>>
 
   // Raptors
   kite: [
+    { sp: "osprey", w: 5.0 },
     { sp: "brahminy-kite", w: 4.5 },
-    { sp: "osprey", w: 3.5 },
   ],
   "bald eagle": [
+    { sp: "osprey", w: 5.0 },
     { sp: "brahminy-kite", w: 4.0 },
-    { sp: "osprey", w: 4.0 },
   ],
   osprey: [{ sp: "osprey", w: 5.5 }],
   "sea eagle": [
     { sp: "osprey", w: 5.0 },
     { sp: "brahminy-kite", w: 3.5 },
   ],
+  albatross: [{ sp: "osprey", w: 4.5 }],
+  oystercatcher: [{ sp: "osprey", w: 4.0 }],
 
   // Woodpeckers & Hornbills
   woodpecker: [{ sp: "black-rumped-flameback", w: 5.0 }],
   flicker: [{ sp: "black-rumped-flameback", w: 4.5 }],
   hornbill: [{ sp: "great-hornbill", w: 5.0 }],
-  toucan: [{ sp: "great-hornbill", w: 4.0 }],
+  toucan: [
+    { sp: "great-hornbill", w: 4.0 },
+    { sp: "black-rumped-flameback", w: 3.0 },
+  ],
 
   // Bulbuls, Robins & Sparrows
   bulbul: [{ sp: "red-vented-bulbul", w: 5.0 }],
@@ -526,33 +537,52 @@ export async function runClientInference(
     (p) => /peacock|peahen|quill/.test(p.className.toLowerCase()) && p.probability >= 0.05
   );
 
+  // Black-rumped Flameback detection (woodpecker with scarlet crest, golden mantle, black-and-white face):
+  const isFlameback =
+    !isPeafowlNeural &&
+    (((colorSignature.crimsonRed >= 0.015 || colorSignature.coralRed >= 0.005) &&
+      colorSignature.goldenYellow >= 0.015 &&
+      colorSignature.deepBlack >= 0.08) ||
+      (allPreds.some((p) => /coucal/.test(p.className.toLowerCase()) && p.probability >= 0.025) &&
+        (colorSignature.crimsonRed >= 0.01 || colorSignature.goldenYellow >= 0.01)));
+  if (isFlameback) {
+    speciesScores["black-rumped-flameback"] = (speciesScores["black-rumped-flameback"] || 0) + 5.2;
+  }
+
   // Red Junglefowl:
   // Clean neuralSummary to avoid matching "cock" inside "peacock" or "hen" inside "peahen"
   const cleanForJunglefowl = neuralSummary.replace(/\b(peacock|peahen)\b/g, "").replace(/peacock|peahen/g, "");
   const isJunglefowl = /\b(cock|rooster|hen|partridge|quail|junglefowl)\b/.test(cleanForJunglefowl);
   if (
     !isPeafowlNeural &&
+    !isFlameback &&
     (isJunglefowl ||
-      (colorSignature.crimsonRed >= 0.012 && (colorSignature.goldenYellow >= 0.02 || colorSignature.deepBlack >= 0.06)))
+      (colorSignature.crimsonRed >= 0.015 && (colorSignature.goldenYellow >= 0.02 || colorSignature.deepBlack >= 0.06)))
   ) {
     speciesScores["red-junglefowl"] = (speciesScores["red-junglefowl"] || 0) + 4.8;
   }
 
   // Indian Vulture:
-  if (/vulture/.test(neuralSummary)) {
+  const isVultureNeural = allPreds.some(
+    (p) => p.className.toLowerCase().includes("vulture") && p.probability >= 0.06
+  );
+  if (isVultureNeural) {
     speciesScores["indian-vulture"] = (speciesScores["indian-vulture"] || 0) + 5.0;
   }
 
   // Raptors: Osprey vs Brahminy Kite
-  const isRaptor = /kite|bald eagle|osprey|sea eagle/.test(neuralSummary);
-  if (isRaptor || (colorSignature.slateGrey >= 0.15 && !/vulture|pelican/.test(neuralSummary))) {
+  const isRaptor =
+    allPreds.some(
+      (p) => /kite|bald eagle|sea eagle|albatross|oystercatcher/.test(p.className.toLowerCase()) && p.probability >= 0.02
+    ) || /osprey/.test(neuralSummary);
+  if (isRaptor) {
     // Brahminy Kite: pure white head/chest + rich chestnut body
-    if (colorSignature.pureWhite >= 0.12 && colorSignature.chestnutBrown >= 0.04) {
-      speciesScores["brahminy-kite"] = (speciesScores["brahminy-kite"] || 0) + 4.8;
+    if (colorSignature.pureWhite >= 0.10 && colorSignature.chestnutBrown >= 0.035) {
+      speciesScores["brahminy-kite"] = (speciesScores["brahminy-kite"] || 0) + 5.0;
     }
     // Osprey: dark brown/black mantle + white underparts + low chestnut
-    else if (colorSignature.deepBlack >= 0.15 && colorSignature.chestnutBrown < 0.02) {
-      speciesScores["osprey"] = (speciesScores["osprey"] || 0) + 4.8;
+    else if (colorSignature.chestnutBrown < 0.03) {
+      speciesScores["osprey"] = (speciesScores["osprey"] || 0) + 5.0;
     }
   }
 
@@ -564,31 +594,61 @@ export async function runClientInference(
     speciesScores["spot-billed-pelican"] = (speciesScores["spot-billed-pelican"] || 0) + 4.8;
   }
 
-  // Sarus Crane vs Painted Stork vs Eurasian Spoonbill:
-  if (/crane|stork|spoonbill|gallinule/.test(neuralSummary) || colorSignature.slateGrey >= 0.10) {
-    if (/spoonbill/.test(neuralSummary) && colorSignature.pureWhite >= 0.08 && colorSignature.slateGrey < 0.09) {
-      speciesScores["eurasian-spoonbill"] = (speciesScores["eurasian-spoonbill"] || 0) + 4.8;
-    } else if (colorSignature.slateGrey >= 0.09 || /crane|gallinule/.test(neuralSummary)) {
-      speciesScores["sarus-crane"] = (speciesScores["sarus-crane"] || 0) + 4.8;
-    } else if (
-      colorSignature.vibrantPink >= 0.008 ||
-      (colorSignature.pureWhite >= 0.20 && colorSignature.deepBlack >= 0.06)
-    ) {
-      speciesScores["painted-stork"] = (speciesScores["painted-stork"] || 0) + 4.0;
-    }
+  // Painted Stork vs Eurasian Spoonbill vs Sarus Crane:
+  const isPaintedStork =
+    colorSignature.vibrantPink >= 0.006 ||
+    ((colorSignature.goldenYellow >= 0.025 || colorSignature.coralRed >= 0.004) &&
+      colorSignature.pureWhite >= 0.08 &&
+      colorSignature.deepBlack >= 0.03 &&
+      /stork|spoonbill/.test(neuralSummary));
+
+  const hasCraneStrong = allPreds.some(
+    (p) => /crane|gallinule/.test(p.className.toLowerCase()) && p.probability >= 0.04
+  );
+  const hasSpoonStrong = allPreds.some(
+    (p) => /spoonbill/.test(p.className.toLowerCase()) && p.probability >= 0.04
+  );
+
+  if (isPaintedStork || (/stork/.test(neuralSummary) && colorSignature.vibrantPink >= 0.005)) {
+    speciesScores["painted-stork"] = (speciesScores["painted-stork"] || 0) + 5.5;
+  } else if (
+    (hasCraneStrong || (/crane|gallinule/.test(neuralSummary) && !hasSpoonStrong)) &&
+    !allPreds.some((p) => p.className.toLowerCase().includes("heron") && p.probability >= 0.04)
+  ) {
+    speciesScores["sarus-crane"] = (speciesScores["sarus-crane"] || 0) + 5.2;
+  } else if (
+    !isPaintedStork &&
+    (hasSpoonStrong ||
+      ((/spoonbill|egret/.test(neuralSummary) ||
+        (colorSignature.pureWhite >= 0.12 && !/kite|owl|bulbul|magpie|hornbill/.test(neuralSummary))) &&
+        !allPreds.some((p) => p.className.toLowerCase().includes("heron") && p.probability >= 0.04)))
+  ) {
+    speciesScores["eurasian-spoonbill"] = (speciesScores["eurasian-spoonbill"] || 0) + 5.2;
   }
 
   // White-throated Kingfisher vs Indian Roller:
   const isCoraciiform = /bee eater|jacamar|kingfisher|jay|coucal|ruddy turnstone/.test(neuralSummary);
-  if (isCoraciiform || (!isPeafowlNeural && colorSignature.electricBlue >= 0.04)) {
+  if (
+    isCoraciiform ||
+    (!isPeafowlNeural &&
+      colorSignature.electricBlue >= 0.04 &&
+      colorSignature.pureWhite < 0.10 &&
+      !/spoonbill|stork|crane|heron|pelican/.test(neuralSummary))
+  ) {
     if (
-      colorSignature.deepBlack >= 0.12 &&
+      colorSignature.deepBlack >= 0.10 &&
       colorSignature.electricBlue >= 0.006 &&
-      (colorSignature.pureWhite >= 0.06 || colorSignature.coralRed >= 0.003 || colorSignature.chestnutBrown >= 0.01)
+      (colorSignature.pureWhite >= 0.04 || colorSignature.coralRed >= 0.003 || colorSignature.chestnutBrown >= 0.01)
     ) {
-      speciesScores["white-throated-kingfisher"] = (speciesScores["white-throated-kingfisher"] || 0) + 4.8;
-    } else if (!isPeafowlNeural && colorSignature.electricBlue >= 0.04 && colorSignature.chestnutBrown < 0.01) {
-      speciesScores["indian-roller"] = (speciesScores["indian-roller"] || 0) + 4.8;
+      speciesScores["white-throated-kingfisher"] = (speciesScores["white-throated-kingfisher"] || 0) + 5.0;
+    } else if (
+      allPreds.some((p) => /bee eater|jay/.test(p.className.toLowerCase()) && p.probability >= 0.05) ||
+      (!isPeafowlNeural &&
+        colorSignature.electricBlue >= 0.02 &&
+        colorSignature.chestnutBrown < 0.01 &&
+        !allPreds.some((p) => /indigo bunting|sunbird/.test(p.className.toLowerCase()) && p.probability >= 0.08))
+    ) {
+      speciesScores["indian-roller"] = (speciesScores["indian-roller"] || 0) + 5.0;
     }
   }
 
@@ -607,18 +667,23 @@ export async function runClientInference(
   // Purple Sunbird:
   if (
     !isPeafowlNeural &&
+    !/spoonbill|stork|crane|heron|pelican|vulture|kite|eagle/.test(neuralSummary) &&
     colorSignature.electricBlue >= 0.02 &&
     colorSignature.chestnutBrown < 0.005 &&
-    colorSignature.pureWhite < 0.40
+    colorSignature.pureWhite < 0.35
   ) {
-    speciesScores["purple-sunbird"] = (speciesScores["purple-sunbird"] || 0) + 4.5;
+    speciesScores["purple-sunbird"] = (speciesScores["purple-sunbird"] || 0) + 5.0;
   }
 
   // Black-crowned Night Heron:
-  if (/heron|bittern/.test(neuralSummary)) {
-    if (colorSignature.pureWhite >= 0.10 && colorSignature.slateGrey >= 0.04) {
-      speciesScores["black-crowned-night-heron"] = (speciesScores["black-crowned-night-heron"] || 0) + 4.5;
-    }
+  const hasHeronPred = allPreds.some((p) => /heron|bittern/.test(p.className.toLowerCase()) && p.probability >= 0.03);
+  const hasSpoonDominant = allPreds.some((p) => /spoonbill/.test(p.className.toLowerCase()) && p.probability >= 0.05);
+  if (
+    !hasSpoonDominant &&
+    (hasHeronPred ||
+      (/heron|bittern/.test(neuralSummary) && colorSignature.pureWhite >= 0.08 && colorSignature.slateGrey >= 0.035))
+  ) {
+    speciesScores["black-crowned-night-heron"] = (speciesScores["black-crowned-night-heron"] || 0) + 4.8;
   }
 
   // Indian Peafowl:
@@ -630,23 +695,23 @@ export async function runClientInference(
     speciesScores["indian-peafowl"] = (speciesScores["indian-peafowl"] || 0) + 4.8;
   }
 
-  // Black-rumped Flameback:
-  if (
-    (colorSignature.crimsonRed >= 0.02 &&
-      (colorSignature.goldenYellow >= 0.025 || colorSignature.deepBlack >= 0.08)) ||
-    neuralSummary.includes("woodpecker") ||
-    neuralSummary.includes("flicker")
-  ) {
-    speciesScores["black-rumped-flameback"] = (speciesScores["black-rumped-flameback"] || 0) + 4.5;
-  }
-
   // Great Hornbill:
   if (
     (colorSignature.goldenYellow >= 0.05 && colorSignature.deepBlack >= 0.15) ||
     neuralSummary.includes("hornbill") ||
     neuralSummary.includes("toucan")
   ) {
-    speciesScores["great-hornbill"] = (speciesScores["great-hornbill"] || 0) + 4.5;
+    if (!isFlameback) {
+      speciesScores["great-hornbill"] = (speciesScores["great-hornbill"] || 0) + 4.5;
+    }
+  }
+
+  // Red-vented Bulbul:
+  if (
+    allPreds.some((p) => p.className.toLowerCase().includes("bulbul") && p.probability >= 0.08) ||
+    (/bulbul/.test(neuralSummary) && colorSignature.crimsonRed >= 0.008)
+  ) {
+    speciesScores["red-vented-bulbul"] = (speciesScores["red-vented-bulbul"] || 0) + 5.0;
   }
 
   // Oriental Magpie-Robin:
